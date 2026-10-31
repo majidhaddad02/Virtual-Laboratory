@@ -1,5 +1,17 @@
 # فیزیک‌لب
 
-Before adding or editing a simulation, read `docs/DESIGN.md` and `docs/ARCHITECTURE.md`. Do not reread every HTML file.
+Routing (task → read first):
 
-Static site: `index.html` + `css/*.css` + `core/*.js` + `data/registry.js` + `sims/<id>/`. Catalog cards from the registry, not nested tabs. RTL UI, LTR `.formula`.
+- New or edited sim → `docs/ADDING_A_SIM.md`, `docs/DESIGN.md`, `docs/sims/<id>.md`
+- Core / widgets / shell → `docs/API.md`, `docs/ARCHITECTURE.md`
+- Tests → `docs/TESTING.md`
+- Port leftovers / known gaps → `docs/ISSUES.md`
+- Shared helpers → `shared/README.md`
+
+Commands: `npm test` · `npm run build-registry` · `npm run sync-pages`
+
+After editing metadata or core scripts, run both generators.
+
+Never read `legacy/` or other sims' code unless the task says so. Do not reread every HTML file.
+
+Static site: catalog cards from `PL.registry`. RTL UI, LTR `.formula`.

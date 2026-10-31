@@ -3,7 +3,7 @@
     'sim.hydrostatic.depth': 'عمق h',
     'sim.hydrostatic.liquid': 'مایع',
     'sim.hydrostatic.water': 'آب',
-    'sim.hydrostatic.oil': 'روغن',
+    'sim.hydrostatic.oil': 'روغن سبک',
     'sim.hydrostatic.mercury': 'جیوه',
     'sim.hydrostatic.display': 'نمایش',
     'sim.hydrostatic.showP': 'فشارسنج',

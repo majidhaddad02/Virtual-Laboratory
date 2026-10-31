@@ -12,7 +12,7 @@ If Node is missing, skip running tests; do not install packages.
 
 ## Loader
 
-`tests/helpers/load.js` reads `core/manifest.json` and loads those files (then optional extra files) into a `vm` context whose global is `window`.
+`tests/helpers/load.js` reads `core/manifest.json` and loads those files (then optional extra files) into a `vm` context whose global is `window`. Crystal tests also load `shared/crystals/lattice.js`.
 
 ## Minimum suites
 
@@ -20,12 +20,14 @@ If Node is missing, skip running tests; do not install packages.
 - `tests/format.test.js` — `num(1.5,1)=="۱٫۵"`, `num(-2,0)=="−۲"`, `parseNum("۱٫۵")==1.5`.
 - `tests/i18n.test.js` — interpolation; missing key `⟦key⟧`.
 - `tests/loop.test.js` — 60 frames of 16.667 ms at speed 1 ~ 60 steps; paused 0; stepOnce 1; speed 2 ~ double; 2 s frame clamped.
-- `tests/registry.test.js` — unique ids; required fields; topics exist; path files exist; thumbnail starts with `<svg`; goals non-empty.
-- `tests/pages.test.js` — every `sims/*/index.html` has core tags in manifest order; local files exist; no `type="module"`; no forbidden URLs.
-- `tests/sims/crystalline.test.js` — 2D invariants (equal site counts; amorphous min distance; T=0 displacement 0; rms ~ sqrt(T) with seeded rng).
+- `tests/dialogs.test.js` — `nextFocusIndex` wrap; `shouldClose` Escape.
+- `tests/registry.test.js` — unique ids; required fields; topics exist; path files exist; thumbnail starts with `<svg`; goals non-empty; committed file matches `tools/build-registry.js`.
+- `tests/pages.test.js` — core / shared / sim markers; core tags in manifest order; shared after core and before `strings.js`; local files exist; no `type="module"`; no forbidden URLs. Failure message: `run npm run sync-pages`.
+- `tests/api-docs.test.js` — every key of `PL.ui`, `PL.dialogs`, `PL.format`, `PL.shared.crystals` appears in `docs/API.md`.
+- `tests/sims/crystalline.test.js` — 2D invariants (equal site counts; amorphous min distance vs measured floor; T=0 displacement 0; rms ~ sqrt(T) with seeded rng).
 - `tests/sims/crystalline-3d.test.js` — 8 corners; 1 atom/cell; bulk coordination 6; 27-cell cycle.
-- `tests/sims/hydrostatic.test.js` — P = P0 + ρgh; same P at A/B/C; density/depth dependence.
-- `tests/sims/u-tube.test.js` — equal P in connected fluid; Σρgh equal at join; volume conserved; density relations; unknown height from equation; reject different liquids.
+- `tests/sims/hydrostatic.test.js` — gauge pressure ∝ depth; ∝ rho; P(0)=P0.
+- `tests/sims/u-tube.test.js` — equal P in connected fluid at several y; g scales P not heights; Σρgh equal at join; volume conserved; density relations; unknown height from equation at y=0 and another level; reject different liquids.
 - `tests/sims/surface-tension.test.js` — surface net inward vs bulk ~0; Jurin 1/r and mercury depression; soap sink; adhesion↔θ; Reset All.
 - `tests/smoke.test.js` — each ported view `draw()` with a Proxy stub 2D context.
 

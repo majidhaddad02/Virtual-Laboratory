@@ -35,7 +35,7 @@
   }
 
   function amorphSites(rng) {
-    return PL.lattice.pack3d({
+    return PL.shared.crystals.pack3d({
       n: N,
       rng: rng,
       halfExtent: HALF,
@@ -99,9 +99,9 @@
     var crystal, amorphous, unit;
 
     function rebuild() {
-      crystal = decorate(PL.lattice.build(crystalSites(), 1.1), 0.095, '#64b0ff');
-      amorphous = decorate(PL.lattice.build(amorphSites(rng), 1.2), 0.095, '#ffb347');
-      unit = decorate(PL.lattice.build(cellSites(), 1.1), 0.30, '#64b0ff');
+      crystal = decorate(PL.shared.crystals.build(crystalSites(), 1.1), 0.095, '#64b0ff');
+      amorphous = decorate(PL.shared.crystals.build(amorphSites(rng), 1.2), 0.095, '#ffb347');
+      unit = decorate(PL.shared.crystals.build(cellSites(), 1.1), 0.30, '#64b0ff');
       markUnitCell(unit);
       applyCell(crystal, cellIndex.value);
     }
@@ -136,9 +136,9 @@
       speed: speed,
       step: function (dt) {
         var o = stepOpts(dt);
-        PL.lattice.step(crystal, o);
-        PL.lattice.step(amorphous, o);
-        PL.lattice.step(unit, o);
+        PL.shared.crystals.step(crystal, o);
+        PL.shared.crystals.step(amorphous, o);
+        PL.shared.crystals.step(unit, o);
       },
       reset: function () {
         temperature.reset();
@@ -155,7 +155,7 @@
         cellIndex.value = (cellIndex.value + 1) % CELL_COUNT;
       },
       regenerateAmorphous: function () {
-        amorphous = decorate(PL.lattice.build(amorphSites(rng), 1.2), 0.095, '#ffb347');
+        amorphous = decorate(PL.shared.crystals.build(amorphSites(rng), 1.2), 0.095, '#ffb347');
       },
       getCrystal: function () { return crystal; },
       getAmorphous: function () { return amorphous; },

@@ -16,7 +16,7 @@ Interactive Persian physics lab. Architecture and interaction follow common lab-
 
 ## Sim brief template
 
-Fill one brief per simulation (keep it in the registry `goals` / `modelNotes` and this section when a sim is ported).
+Fill one brief per simulation in `docs/sims/<id>.md` (and keep `goals` / `modelNotes` in `sims/<id>/meta.js`).
 
 1. Learning goals (exactly 3, student-facing in Persian in the registry).
 2. Model assumptions and validity range (what is idealized, SI units, when the model is wrong).
@@ -24,40 +24,7 @@ Fill one brief per simulation (keep it in the registry `goals` / `modelNotes` an
 4. Screens (one apparatus = one screen unless modes are truly different experiments).
 5. Representations (canvas, gauges, equation overlay) and how they stay in sync.
 
-### Crystalline 2D brief
-
-- Goals: see long-range order vs amorphous packing; see vibration amplitude grow with temperature; toggle bonds.
-- Assumptions: 2D cartoon particles; harmonic wells; T is a 0–100 relative scale, not kelvin; positions live in the unit square.
-- Controls: temperature, show bonds, regenerate amorphous, play/pause (time-based). Reset All restores T=35, bonds on, playing on, and rebuilds both lattices.
-- One screen. Two side-by-side canvases (crystal / amorphous).
-
-### Crystalline 3D brief
-
-- Goals: see the simple-cubic unit cell; follow corner-sharing (8 x 1/8 = 1 atom/cell); compare crystal vs amorphous.
-- Assumptions: cartoon 4x4x4 simple cubic; T is 0–100 relative; camera yaw/pitch is display-only.
-- Controls: temperature, bonds, show cell, spin, auto-advance cell, next cell, regenerate amorphous. Reset All restores T=30, overlays on (auto off), cell index 13, camera 0.7 / -0.5.
-- One screen. Three canvases: crystal, unit cell, amorphous.
-
-### Hydrostatic brief
-
-- Goals: equal pressure at equal depth in connected vessels; follow P = P0 + ρgh; vessel shape does not change P on the purple line.
-- Assumptions: one liquid at a time (water 1000, oil 800, mercury 13600); g = 9.8; P0 = 101325 Pa; slider depth 6–78 maps to 0–0.22 m.
-- Controls: depth (slider or drag the line), liquid, gauges, height overlay, equation banner. Reset All restores depth 42, water, overlays on.
-- One screen. Single canvas + analog gauges.
-
-### U-tube brief
-
-- Goals: pick a valid equal-pressure pair in one connected liquid; write P from vertical layer thicknesses; predict the unknown height.
-- Assumptions: open arms; bend is graphical; water 1000, oil 920, glycerin 1260; g = 9.8 or 10; heights in cm internally converted to m for ρgh.
-- Controls: case (one/two/three liquids), guided phases, compare, g toggle, guess input. Reset All restores case 2 (دو مایع), g=9.8, phase 0, no points.
-- One screen with guided phases (not separate screens).
-
-### Surface tension brief
-
-- Goals: see net inward force on a surface molecule; float a needle vs soap; compare capillary rise/depression vs radius.
-- Assumptions: cartoon 2D; water γ=0.072 ρ=1000 θ0=10°; mercury γ=0.485 ρ=13600 θ0=140°; g=9.8; Jurin h=2γcosθ/(ρgr); soap multiplies γ by 0.4; needle L=35 mm, F=2γL.
-- Controls: five screens (molecules, needle, drop, capillary, compare). Shared model so tab switches keep state. Reset All restores depth 3, cohesion 1, mass 0.25, adhesion 0.75, water, θ=10, radii mode, floating needle, zeroed columns.
-- Five screens: different experiments, not one apparatus.
+Ported briefs: `docs/sims/crystalline.md`, `docs/sims/crystalline-3d.md`, `docs/sims/hydrostatic.md`, `docs/sims/u-tube.md`, `docs/sims/surface-tension.md`.
 
 ## Catalog
 
@@ -84,9 +51,11 @@ css/tokens.css             :root tokens
 css/shell.css              sim chrome + widgets
 css/catalog.css            catalog page
 core/*.js                  window.PL (IIFE, classic scripts)
-data/registry.js           PL.topics, PL.registry
+data/topics.js             PL.topics
+data/registry.js           PL.registry (generated)
+shared/<topic>/*.js        domain helpers (PL.shared.<topic>)
 sims/<id>/index.html       thin page
-sims/<id>/*.js             strings, model, view, main
+sims/<id>/*.js             strings, model, view, main, meta
 legacy/                    pre-port HTML for parity
 ```
 
@@ -97,28 +66,6 @@ Preview from repo root: `python3 -m http.server 8000 --bind 0.0.0.0`. Also works
 - SI internally; display kPa / cm as needed.
 - `g = 9.8`, `P0 = 101325 Pa` unless the experiment requires classroom `g = 10`.
 - Canvas `fit` with `devicePixelRatio`. `requestAnimationFrame` via `PL.Loop`.
-
-## Hydrostatic
-
-- One liquid at a time: water 1000, oil 800, mercury 13600 kg/m³.
-- Connected tank + vessels A (wide bottom), B (cylinder), C (funnel).
-- Dashed purple equal-pressure line; `P = P0 + ρgh` identical at A,B,C.
-
-## U-tube
-
-Teach: pick a valid equal-pressure pair, write `P = P_atm + Σρᵢghᵢ` (vertical thicknesses), solve an unknown height.
-
-- Open arms; bend is graphical. Safe liquids: آب 1000, روغن 920, گلیسیرین 1260.
-- Valid pair iff both points sit in the same connected liquid.
-- Do not treat any same-height pair as equal pressure.
-- Do not use path length along the bend as `h`.
-- Do not make ΔP = ρgΔh the primary lesson (that is hydrostatic).
-- U-tube is its own catalog card, not a tab on hydrostatic.
-
-## Surface tension / crystals (notes)
-
-- Capillary: water climbs (concave), mercury depresses (convex).
-- Crystals: ordered lattice vs amorphous; 3D unit cell. Cartoon 2D, not photoreal.
 
 ## Anti-patterns
 

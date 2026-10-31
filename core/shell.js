@@ -18,6 +18,7 @@
     var models = [];
     var views = [];
     var loops = [];
+    var playLinks = [];
     var i;
     for (i = 0; i < screens.length; i++) {
       models[i] = screens[i].createModel();
@@ -159,10 +160,11 @@
         speed: model.speed
       });
       loops[idx].start();
-      if (model.timeBased) {
-        model.playing.link(function () {
+      if (model.timeBased && !playLinks[idx]) {
+        playLinks[idx] = function () {
           syncTimeChrome(model);
-        });
+        };
+        model.playing.link(playLinks[idx]);
       }
       syncTimeChrome(model);
     }
@@ -198,6 +200,12 @@
       dispose: function () {
         var j;
         for (j = 0; j < loops.length; j++) if (loops[j]) loops[j].stop();
+        for (j = 0; j < playLinks.length; j++) {
+          if (playLinks[j] && models[j] && models[j].playing) {
+            models[j].playing.unlink(playLinks[j]);
+          }
+        }
+        playLinks = [];
         window.removeEventListener('resize', layout);
       }
     };

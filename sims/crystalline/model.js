@@ -23,7 +23,7 @@
   }
 
   function amorphSites(rng) {
-    return PL.lattice.pack2d({
+    return PL.shared.crystals.pack2d({
       n: N,
       rng: rng,
       margin: 0.06,
@@ -44,8 +44,8 @@
     var crystal, amorphous;
 
     function rebuild() {
-      crystal = PL.lattice.build(crystalSites(), CUT);
-      amorphous = PL.lattice.build(amorphSites(rng), CUT);
+      crystal = PL.shared.crystals.build(crystalSites(), CUT);
+      amorphous = PL.shared.crystals.build(amorphSites(rng), CUT);
     }
 
     rebuild();
@@ -70,8 +70,8 @@
       speed: speed,
       step: function (dt) {
         var o = stepOpts(dt);
-        PL.lattice.step(crystal, o);
-        PL.lattice.step(amorphous, o);
+        PL.shared.crystals.step(crystal, o);
+        PL.shared.crystals.step(amorphous, o);
       },
       reset: function () {
         temperature.reset();
@@ -81,12 +81,12 @@
         rebuild();
       },
       regenerateAmorphous: function () {
-        amorphous = PL.lattice.build(amorphSites(rng), CUT);
+        amorphous = PL.shared.crystals.build(amorphSites(rng), CUT);
       },
       getCrystal: function () { return crystal; },
       getAmorphous: function () { return amorphous; },
       rms: function (which) {
-        return PL.lattice.rms(which === 'amorphous' ? amorphous : crystal);
+        return PL.shared.crystals.rms(which === 'amorphous' ? amorphous : crystal);
       }
     };
   }
@@ -103,7 +103,7 @@
     MIN_PLACE: MIN_PLACE,
     crystalSites: crystalSites,
     amorphSites: amorphSites,
-    minDistance: PL.lattice.minDistance,
+    minDistance: PL.shared.crystals.minDistance,
     createModel: createModel
   };
 })(window.PL = window.PL || {});

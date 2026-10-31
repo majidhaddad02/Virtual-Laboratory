@@ -5,7 +5,7 @@ const assert = require('assert');
 const { load } = require('../helpers/load.js');
 
 function ctx() {
-  return load(['sims/crystalline/model.js']);
+  return load(['shared/crystals/lattice.js', 'sims/crystalline/model.js']);
 }
 
 describe('crystalline model', () => {
@@ -18,15 +18,22 @@ describe('crystalline model', () => {
     assert.strictEqual(model.getCrystal().p.length, model.getAmorphous().p.length);
   });
 
-  it('amorphous minimum distance is at least the placement threshold', () => {
+  it('amorphous minimum distance is at least the measured packing floor', () => {
+    // Seeds 1-20 (mulberry32): minD in [0.080985598369851, 0.08346923565931895], mean ~0.08248.
+    // MIN_PLACE=0.66*D~0.06286, RELAX=0.88*D~0.08381. Floor is 0.90 of the measured minimum
+    // so a packing regression fails; vibration can still go closer.
+    const MEASURED_MIN = 0.080985598369851;
+    const FLOOR = MEASURED_MIN * 0.90;
     const { PL } = ctx();
-    const rng = PL.math.mulberry32(7);
-    const sites = PL.sims.crystalline.amorphSites(rng);
-    const minD = PL.sims.crystalline.minDistance(sites);
-    assert.ok(
-      minD + 1e-9 >= PL.sims.crystalline.MIN_PLACE * 0.5,
-      'minD=' + minD + ' threshold=' + PL.sims.crystalline.MIN_PLACE
-    );
+    var seed, sites, minD;
+    for (seed = 1; seed <= 20; seed++) {
+      sites = PL.sims.crystalline.amorphSites(PL.math.mulberry32(seed));
+      minD = PL.sims.crystalline.minDistance(sites);
+      assert.ok(
+        minD + 1e-12 >= FLOOR,
+        'seed=' + seed + ' minD=' + minD + ' floor=' + FLOOR
+      );
+    }
   });
 
   it('at T=0 displacement stays exactly 0', () => {

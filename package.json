@@ -4,6 +4,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js tests/sims/*.test.js",
     "new-sim": "node tools/new-sim.js",
-    "pack": "node tools/pack.js"
+    "pack": "node tools/pack.js",
+    "build-registry": "node tools/build-registry.js",
+    "sync-pages": "node tools/sync-pages.js"
   }
 }

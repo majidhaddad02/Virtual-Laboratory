@@ -20,9 +20,21 @@ if (fs.existsSync(dir)) {
 }
 
 var manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'core/manifest.json'), 'utf8'));
-var scripts = manifest.map(function (f) {
+var coreTags = ['<!-- core:start -->'].concat(manifest.map(function (f) {
   return '<script src="../../' + f + '"></script>';
-}).join('\n');
+})).concat(['<!-- core:end -->']).join('\n');
+
+var nextOrder = 1;
+var simsDir = path.join(ROOT, 'sims');
+var names = fs.readdirSync(simsDir);
+var i, metaPath, txt, m;
+for (i = 0; i < names.length; i++) {
+  metaPath = path.join(simsDir, names[i], 'meta.js');
+  if (!fs.existsSync(metaPath)) continue;
+  txt = fs.readFileSync(metaPath, 'utf8');
+  m = txt.match(/order:\s*(\d+)/);
+  if (m) nextOrder = Math.max(nextOrder, Number(m[1]) + 1);
+}
 
 var index = [
   '<!DOCTYPE html>',
@@ -35,19 +47,23 @@ var index = [
   '<link rel="stylesheet" href="../../css/shell.css">',
   '</head>',
   '<body>',
-  scripts,
+  coreTags,
+  '<!-- shared:start -->',
+  '<!-- shared:end -->',
   '<script src="../../data/registry.js"></script>',
+  '<!-- sim:start -->',
   '<script src="strings.js"></script>',
   '<script src="model.js"></script>',
   '<script src="view.js"></script>',
   '<script src="main.js"></script>',
+  '<!-- sim:end -->',
   '</body>',
   '</html>',
   ''
 ].join('\n');
 
 var brief = [
-  '# Sim brief: ' + id,
+  '# ' + id,
   '',
   '1. Learning goals (3, Persian in the registry):',
   '   - ',
@@ -143,13 +159,67 @@ var main = [
   ''
 ].join('\n');
 
+var meta = [
+  '(function (PL) {',
+  '  PL.meta = PL.meta || {};',
+  "  PL.meta['" + id + "'] = {",
+  "    id: '" + id + "',",
+  "    title: '" + id + "',",
+  "    topics: ['molecular'],",
+  "    level: 'grade10',",
+  '    goals: [',
+  "      'هدف ۱',",
+  "      'هدف ۲',",
+  "      'هدف ۳'",
+  '    ],',
+  '    modelNotes: [',
+  "      'فرض مدل را اینجا بنویسید.'",
+  '    ],',
+  "    status: 'draft',",
+  "    version: '0.1.0',",
+  '    order: ' + nextOrder + ',',
+  "    path: 'sims/" + id + "/index.html',",
+  '    tags: [],',
+  "    curriculum: { grade: '', chapter: '' }",
+  '  };',
+  '})(window.PL = window.PL || {});',
+  ''
+].join('\n');
+
+var thumb = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#cfe9f8"/><circle cx="160" cy="100" r="36" fill="#521764"/></svg>\n';
+
+var test = [
+  "'use strict';",
+  '',
+  "const { describe, it } = require('node:test');",
+  "const assert = require('assert');",
+  "const { load } = require('../helpers/load.js');",
+  '',
+  "describe('" + id + " model', () => {",
+  "  it('createModel returns a resettable model', () => {",
+  "    const { PL } = load(['sims/" + id + "/model.js']);",
+  "    const model = PL.sims['" + id + "'].createModel();",
+  '    assert.ok(model);',
+  "    assert.strictEqual(typeof model.reset, 'function');",
+  '    model.reset();',
+  '  });',
+  '});',
+  ''
+].join('\n');
+
 fs.mkdirSync(dir);
+fs.mkdirSync(path.join(ROOT, 'docs/sims'), { recursive: true });
 fs.writeFileSync(path.join(dir, 'index.html'), index);
-fs.writeFileSync(path.join(dir, 'SIM-BRIEF.md'), brief);
+fs.writeFileSync(path.join(ROOT, 'docs/sims', id + '.md'), brief);
 fs.writeFileSync(path.join(dir, 'strings.js'), strings);
 fs.writeFileSync(path.join(dir, 'model.js'), model);
 fs.writeFileSync(path.join(dir, 'view.js'), view);
 fs.writeFileSync(path.join(dir, 'main.js'), main);
+fs.writeFileSync(path.join(dir, 'meta.js'), meta);
+fs.writeFileSync(path.join(dir, 'thumb.svg'), thumb);
+fs.writeFileSync(path.join(ROOT, 'tests/sims', id + '.test.js'), test);
+
+require('./build-registry.js').write();
+require('./sync-pages.js').sync();
 
 console.log('created sims/' + id + '/');
-console.log('add a registry entry in data/registry.js before opening the catalog card');

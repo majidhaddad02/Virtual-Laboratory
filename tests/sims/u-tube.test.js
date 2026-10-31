@@ -8,16 +8,60 @@ function ctx() {
   return load(['sims/u-tube/strings.js', 'sims/u-tube/model.js']);
 }
 
+function connectingSpan(model) {
+  var left = model.left();
+  var right = model.right();
+  var hL = left[0] ? left[0].h : 0;
+  var hR = right[0] ? right[0].h : 0;
+  return Math.min(hL, hR);
+}
+
+function heights(model) {
+  function arm(a) {
+    return a.map(function (x) { return x.h; });
+  }
+  return { L: arm(model.left()), R: arm(model.right()) };
+}
+
 describe('u-tube model', () => {
-  it('same connected fluid at same elevation has equal pressure', () => {
+  it('same connected fluid at several elevations has equal pressure', () => {
     const { PL } = ctx();
-    const model = PL.sims['u-tube'].createModel();
-    model.caseIndex.value = 1;
-    const y = 0;
-    assert.strictEqual(model.connectingId(), 'w');
-    assert.strictEqual(model.fluidAt('L', y), 'w');
-    assert.strictEqual(model.fluidAt('R', y), 'w');
-    assert.ok(Math.abs(model.pressAt('L', y) - model.pressAt('R', y)) < 1e-6);
+    var i, y, span, levels;
+    for (i = 0; i < 3; i++) {
+      const model = PL.sims['u-tube'].createModel();
+      model.caseIndex.value = i;
+      span = connectingSpan(model);
+      levels = [0, span * 0.25, span * 0.5, span * 0.75];
+      assert.ok(span > 1, 'case ' + i + ' connecting span');
+      for (y of levels) {
+        assert.strictEqual(model.fluidAt('L', y), model.connectingId(), 'case ' + i + ' L y=' + y);
+        assert.strictEqual(model.fluidAt('R', y), model.connectingId(), 'case ' + i + ' R y=' + y);
+        assert.ok(
+          Math.abs(model.pressAt('L', y) - model.pressAt('R', y)) < 1e-6,
+          'case ' + i + ' y=' + y + ' L=' + model.pressAt('L', y) + ' R=' + model.pressAt('R', y)
+        );
+      }
+    }
+  });
+
+  it('changing g scales pressures but leaves layer heights unchanged', () => {
+    const { PL } = ctx();
+    var i;
+    for (i = 0; i < 3; i++) {
+      const model = PL.sims['u-tube'].createModel();
+      model.caseIndex.value = i;
+      model.g.value = 9.8;
+      const h0 = heights(model);
+      const pL = model.pressAt('L', 0);
+      const pR = model.pressAt('R', 0);
+      model.g.value = 10;
+      const h1 = heights(model);
+      assert.deepStrictEqual(h1, h0, 'case ' + i + ' heights');
+      const scale = 10 / 9.8;
+      const atm = PL.sims['u-tube'].PATM;
+      assert.ok(Math.abs((model.pressAt('L', 0) - atm) - (pL - atm) * scale) < 1e-6, 'case ' + i + ' L');
+      assert.ok(Math.abs((model.pressAt('R', 0) - atm) - (pR - atm) * scale) < 1e-6, 'case ' + i + ' R');
+    }
   });
 
   it('sum of rho g h above the join is equal in both arms', () => {
@@ -67,13 +111,17 @@ describe('u-tube model', () => {
 
   it('unknown height from the equation equals the model height', () => {
     const { PL } = ctx();
-    var i;
+    var i, y, span;
     for (i = 0; i < 3; i++) {
       const model = PL.sims['u-tube'].createModel();
       model.caseIndex.value = i;
-      const solved = model.solveUnknown();
-      assert.ok(solved != null, 'case ' + i);
-      assert.ok(Math.abs(solved - model.unkH()) < 1e-6, 'case ' + i + ' solved=' + solved + ' unk=' + model.unkH());
+      span = connectingSpan(model);
+      y = span * 0.4;
+      const atJoin = model.solveUnknown();
+      const atY = model.solveUnknown(y);
+      assert.ok(atJoin != null, 'case ' + i);
+      assert.ok(Math.abs(atJoin - model.unkH()) < 1e-6, 'case ' + i + ' y=0 solved=' + atJoin + ' unk=' + model.unkH());
+      assert.ok(Math.abs(atY - model.unkH()) < 1e-6, 'case ' + i + ' y=' + y + ' solved=' + atY + ' unk=' + model.unkH());
     }
   });
 

@@ -10,7 +10,67 @@
     if (node && node.parentNode) node.parentNode.removeChild(node);
   }
 
+  function focusables(root) {
+    var sel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    var nodes = root.querySelectorAll(sel);
+    var out = [];
+    var i;
+    for (i = 0; i < nodes.length; i++) {
+      if (!nodes[i].disabled) out.push(nodes[i]);
+    }
+    return out;
+  }
+
+  function nextFocusIndex(current, count, shift) {
+    if (count <= 0) return 0;
+    if (shift) return current <= 0 ? count - 1 : current - 1;
+    return current >= count - 1 ? 0 : current + 1;
+  }
+
+  function shouldClose(key) {
+    return key === 'Escape' || key === 'Esc';
+  }
+
+  function bindDialog(bg, dialogEl, initialFocus, onClose) {
+    var opener = document.activeElement;
+    function finish() {
+      document.removeEventListener('keydown', onKey, true);
+      close(bg);
+      if (opener && opener.focus) opener.focus();
+      if (onClose) onClose();
+    }
+    function onKey(e) {
+      if (shouldClose(e.key)) {
+        if (e.preventDefault) e.preventDefault();
+        finish();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      var items = focusables(dialogEl);
+      if (!items.length) return;
+      var i;
+      var idx = 0;
+      for (i = 0; i < items.length; i++) {
+        if (items[i] === document.activeElement) {
+          idx = i;
+          break;
+        }
+      }
+      if (e.preventDefault) e.preventDefault();
+      items[nextFocusIndex(idx, items.length, !!e.shiftKey)].focus();
+    }
+    document.addEventListener('keydown', onKey, true);
+    bg.addEventListener('click', function (e) {
+      if (e.target === bg) finish();
+    });
+    document.body.appendChild(bg);
+    if (initialFocus && initialFocus.focus) initialFocus.focus();
+    return finish;
+  }
+
   PL.dialogs = {
+    nextFocusIndex: nextFocusIndex,
+    shouldClose: shouldClose,
     about: function (entry) {
       var bg = backdrop();
       var d = document.createElement('div');
@@ -57,18 +117,12 @@
       var ok = document.createElement('button');
       ok.type = 'button';
       ok.textContent = PL.t('ui.close');
-      ok.addEventListener('click', function () {
-        close(bg);
-      });
       row.appendChild(ok);
       d.appendChild(row);
       bg.appendChild(d);
-      bg.addEventListener('click', function (e) {
-        if (e.target === bg) close(bg);
-      });
-      document.body.appendChild(bg);
-      ok.focus();
-      return { close: function () { close(bg); } };
+      var finish = bindDialog(bg, d, ok);
+      ok.addEventListener('click', finish);
+      return { close: finish };
     },
     confirmReset: function (onYes) {
       var bg = backdrop();
@@ -91,39 +145,17 @@
       yes.type = 'button';
       yes.className = 'danger';
       yes.textContent = PL.t('ui.resetAll');
-      no.addEventListener('click', function () {
-        close(bg);
-      });
-      yes.addEventListener('click', function () {
-        close(bg);
-        onYes();
-      });
       row.appendChild(no);
       row.appendChild(yes);
       d.appendChild(row);
       bg.appendChild(d);
-      bg.addEventListener('click', function (e) {
-        if (e.target === bg) close(bg);
+      var finish = bindDialog(bg, d, no);
+      no.addEventListener('click', finish);
+      yes.addEventListener('click', function () {
+        finish();
+        onYes();
       });
-      document.body.appendChild(bg);
-      no.focus();
-      return { close: function () { close(bg); } };
+      return { close: finish };
     }
   };
-
-  PL.i18n.add('fa', {
-    'ui.about': 'درباره‌ی مدل',
-    'ui.goals': 'هدف‌ها',
-    'ui.modelNotes': 'فرض‌ها و محدودیت‌ها',
-    'ui.version': 'نسخه',
-    'ui.close': 'بستن',
-    'ui.resetAll': 'بازنشانی همه',
-    'ui.resetConfirm': 'همه کنترل‌ها و حالت مدل به مقدار اولیه برگردند؟',
-    'ui.cancel': 'انصراف',
-    'ui.play': 'پخش',
-    'ui.pause': 'توقف',
-    'ui.step': 'گام',
-    'ui.speed': 'سرعت',
-    'ui.back': 'فیزیک‌لب'
-  });
 })(window.PL = window.PL || {});

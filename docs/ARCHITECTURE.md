@@ -12,7 +12,7 @@ No ES modules, no bundler, no `fetch`. Data files are `.js` that assign to `PL.*
 
 ## Script order
 
-Browser pages load core files in the order listed in `core/manifest.json` (that JSON is for tests/tools only; the HTML repeats the same `<script src>` list). Then `data/registry.js` (catalog) or sim files (`strings.js`, `model.js`, `view.js`, `main.js`).
+Browser pages load core files in the order listed in `core/manifest.json` (that JSON is for tests/tools only; HTML between `<!-- core:start -->` and `<!-- core:end -->` is rewritten by `npm run sync-pages`). Then optional `<!-- shared:start -->` files, then `data/registry.js` or sim files (`strings.js`, `model.js`, `view.js`, `main.js`).
 
 Paths from a sim page (`sims/<id>/index.html`) use `../../core/...`. Paths from the catalog use `core/...`.
 
@@ -23,14 +23,16 @@ Paths from a sim page (`sims/<id>/index.html`) use `../../core/...`. Paths from 
 | `ns.js` | Ensure `PL` exists. |
 | `property.js` | `PL.Property`, `PL.derive`, `PL.Emitter`. |
 | `math.js` | `clamp`, `lerp`, `mulberry32`, `gauss`. |
-| `lattice.js` | Shared 2D/3D packing, bonds, harmonic `step`, rms, coordination. |
 | `format.js` | Persian digits, parse, unit HTML. |
 | `i18n.js` | `PL.i18n.add`, `PL.t`. |
+| `strings.js` | Shell `ui.*` strings. |
 | `loop.js` | Fixed-timestep loop, play/pause/step/speed. |
 | `draw.js` | Canvas helpers (DPR fit). |
 | `widgets.js` | `PL.ui.*` two-way bound controls. |
 | `dialogs.js` | About-model and confirm-reset dialogs. |
 | `shell.js` | `PL.Shell.start(simDef, rootEl)`. |
+
+Domain packing lives in `shared/crystals/lattice.js` (`PL.shared.crystals`), not core.
 
 ## Property
 
@@ -70,7 +72,7 @@ Screen: `{ id, title (i18n key), icon (SVG string), createModel(), createView(mo
 
 ## Catalog
 
-`data/registry.js` defines `PL.topics` and `PL.registry`. `index.html` renders cards, chips, and counts from that array. Hash filter: `#molecular`, `#pressure`.
+`data/topics.js` defines `PL.topics`. `data/registry.js` is generated (`PL.registry` only). `index.html` renders cards from that array. Hash filter: `#molecular`, `#pressure`.
 
 ## Unported sims
 
@@ -82,4 +84,4 @@ Ported: `sims/crystalline/`, `sims/crystalline-3d/`, `sims/hydrostatic/`, `sims/
 
 ## Tools
 
-`node tools/new-sim.js <id>` creates `sims/<id>/` with core script tags in manifest order, `strings.js`, `model.js`, `view.js`, `main.js`, and `SIM-BRIEF.md`. Add a `data/registry.js` entry before the catalog can show a card.
+`node tools/new-sim.js <id>` creates `sims/<id>/` with marker blocks, `meta.js`, placeholder `thumb.svg`, `strings.js`, `model.js`, `view.js`, `main.js`, `docs/sims/<id>.md`, and `tests/sims/<id>.test.js`, then runs `build-registry` and `sync-pages`.

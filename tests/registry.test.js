@@ -5,12 +5,13 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const { load, ROOT } = require('./helpers/load.js');
+const builder = require('../tools/build-registry.js');
 
 const REQUIRED = ['id', 'title', 'topics', 'level', 'goals', 'modelNotes', 'status', 'version', 'order', 'thumbnail', 'path'];
 
 describe('registry', () => {
   it('ids unique, fields present, topics exist, files exist', () => {
-    const ctx = load(['data/registry.js']);
+    const ctx = load(['data/topics.js', 'data/registry.js']);
     const PL = ctx.PL;
     const ids = {};
     const topicIds = {};
@@ -30,5 +31,12 @@ describe('registry', () => {
       }
       assert.ok(fs.existsSync(path.join(ROOT, e.path)), 'missing path ' + e.path);
     }
+  });
+
+  it('committed registry matches the builder', () => {
+    const result = builder.build();
+    assert.deepStrictEqual(result.errors, []);
+    const current = fs.readFileSync(path.join(ROOT, 'data/registry.js'), 'utf8');
+    assert.strictEqual(current, result.code, 'run npm run build-registry');
   });
 });

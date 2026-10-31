@@ -1,6 +1,6 @@
 (function (PL) {
   function createView(model) {
-    var stageEl, panelEl, c1, c2, widgets, barFill;
+    var stageEl, panelEl, c1, c2, widgets, barFill, onTemp;
     var layoutW = 1, layoutH = 1, layoutDpr = 1;
 
     function makeCanvas(labelKey) {
@@ -90,9 +90,10 @@
         bar.appendChild(barFill);
         meter.appendChild(bar);
         sTemp.el.appendChild(meter);
-        model.temperature.link(function (v) {
+        onTemp = function (v) {
           barFill.style.width = v + '%';
-        });
+        };
+        model.temperature.link(onTemp);
         panel.appendChild(sTemp.el);
         widgets.push(sTemp);
 
@@ -134,6 +135,10 @@
       reset: function () {},
       dispose: function () {
         var i;
+        if (onTemp) {
+          model.temperature.unlink(onTemp);
+          onTemp = null;
+        }
         if (widgets) {
           for (i = 0; i < widgets.length; i++) {
             if (widgets[i].dispose) widgets[i].dispose();

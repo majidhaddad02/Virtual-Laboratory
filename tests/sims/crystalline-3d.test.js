@@ -5,7 +5,7 @@ const assert = require('assert');
 const { load } = require('../helpers/load.js');
 
 function ctx() {
-  return load(['sims/crystalline-3d/model.js']);
+  return load(['shared/crystals/lattice.js', 'sims/crystalline-3d/model.js']);
 }
 
 describe('crystalline-3d model', () => {
@@ -22,9 +22,9 @@ describe('crystalline-3d model', () => {
   it('bulk coordination of simple cubic is 6', () => {
     const { PL } = ctx();
     const S = PL.sims['crystalline-3d'];
-    const cry = PL.lattice.build(S.crystalSites(), 1.1);
+    const cry = PL.shared.crystals.build(S.crystalSites(), 1.1);
     const idx = S.interiorIndex();
-    assert.strictEqual(PL.lattice.coordination(cry, idx), S.BULK_COORD);
+    assert.strictEqual(PL.shared.crystals.coordination(cry, idx), S.BULK_COORD);
   });
 
   it('cell cycling visits all 27 cells', () => {

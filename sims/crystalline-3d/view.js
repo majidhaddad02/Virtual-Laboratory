@@ -9,6 +9,7 @@
     var lastY = 0;
     var lastAuto = 0;
     var barFill;
+    var onTemp;
     var CAM = PL.sims['crystalline-3d'].CAM;
 
     function rot(x, y, z) {
@@ -145,7 +146,8 @@
         bar.className = 'bar';
         bar.appendChild(barFill);
         sTemp.el.appendChild(bar);
-        model.temperature.link(function (v) { barFill.style.width = v + '%'; });
+        onTemp = function (v) { barFill.style.width = v + '%'; };
+        model.temperature.link(onTemp);
         panel.appendChild(sTemp.el);
         widgets.push(sTemp);
 
@@ -202,6 +204,10 @@
       },
       dispose: function () {
         var i;
+        if (onTemp) {
+          model.temperature.unlink(onTemp);
+          onTemp = null;
+        }
         for (i = 0; i < widgets.length; i++) {
           if (widgets[i].dispose) widgets[i].dispose();
         }

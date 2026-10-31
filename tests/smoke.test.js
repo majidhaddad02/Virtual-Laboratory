@@ -26,6 +26,7 @@ describe('smoke', () => {
   it('crystalline view.draw does not throw', () => {
     const context = load([
       'data/registry.js',
+      'shared/crystals/lattice.js',
       'sims/crystalline/strings.js',
       'sims/crystalline/model.js',
       'sims/crystalline/view.js'
@@ -59,6 +60,7 @@ describe('smoke', () => {
   it('crystalline-3d view.draw does not throw', () => {
     const context = load([
       'data/registry.js',
+      'shared/crystals/lattice.js',
       'sims/crystalline-3d/strings.js',
       'sims/crystalline-3d/model.js',
       'sims/crystalline-3d/view.js'

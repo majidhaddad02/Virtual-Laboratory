@@ -229,28 +229,37 @@
       reasonName.value = LIQ[conn].nameKey;
     }
 
-    function solveUnknown() {
+    function armContrib(arm, y, unkIndex) {
+      var pos = 0;
+      var sum = 0;
+      var coeff = 0;
+      var i, bot, top, take, rho;
+      for (i = 0; i < arm.length; i++) {
+        bot = pos;
+        top = pos + arm[i].h;
+        pos = top;
+        rho = LIQ[arm[i].id].rho;
+        if (i === unkIndex) {
+          if (y >= top - 1e-9) continue;
+          coeff += rho;
+          if (y > bot + 1e-9) sum -= rho * (y - bot);
+        } else {
+          if (y >= top - 1e-9) continue;
+          take = top - Math.max(y, bot);
+          if (take > 0.02) sum += rho * take;
+        }
+      }
+      return { sum: sum, coeff: coeff };
+    }
+
+    function solveUnknown(refY) {
       var conn = connectingId();
-      if (!conn) return null;
-      var y = 0;
-      var aL = layersAbove(left, y);
-      var aR = layersAbove(right, y);
-      var unkId = (unk.arm === 'L' ? left : right)[unk.i].id;
-      var sumL = 0;
-      var sumR = 0;
-      var coeffL = 0;
-      var coeffR = 0;
-      var i;
-      for (i = 0; i < aL.length; i++) {
-        if (unk.arm === 'L' && aL[i].id === unkId && Math.abs(aL[i].h - unkH()) < 0.05) coeffL += LIQ[aL[i].id].rho;
-        else sumL += LIQ[aL[i].id].rho * aL[i].h;
-      }
-      for (i = 0; i < aR.length; i++) {
-        if (unk.arm === 'R' && aR[i].id === unkId && Math.abs(aR[i].h - unkH()) < 0.05) coeffR += LIQ[aR[i].id].rho;
-        else sumR += LIQ[aR[i].id].rho * aR[i].h;
-      }
-      if (coeffL !== 0) return (sumR - sumL) / coeffL;
-      if (coeffR !== 0) return (sumL - sumR) / coeffR;
+      if (!conn || !unk) return null;
+      var y = refY == null ? 0 : refY;
+      var L = armContrib(left, y, unk.arm === 'L' ? unk.i : -1);
+      var R = armContrib(right, y, unk.arm === 'R' ? unk.i : -1);
+      if (L.coeff !== 0) return (R.sum - L.sum) / L.coeff;
+      if (R.coeff !== 0) return (L.sum - R.sum) / R.coeff;
       return null;
     }
 

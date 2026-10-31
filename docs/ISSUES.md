@@ -13,7 +13,7 @@ Logged during ports. Do not fix during a port except crashes. Each later fix nee
 ## Crystalline 2D (port)
 
 - Temperature T is a 0–100 relative slider, not kelvin. Vibration rms uses `RMS_MAX * sqrt(T/100)`. At T=0 the noise term is 0 but existing displacements are not forced to 0 until reset (legacy same). Reset All now rebuilds both lattices and zeroes displacements.
-- Amorphous packing is stochastic dart-throw + repulsion; minimum distance is targeted (`0.66 * D` during placement, `0.88 * D` during relaxation) but not a hard invariant after vibration. Tests use a documented placement threshold.
+- Amorphous packing is stochastic dart-throw + repulsion; minimum distance is targeted (`0.66 * D` during placement, `0.88 * D` during relaxation) but not a hard invariant after vibration.
 - Pause icon lives in the shell bottom bar (time-based model) rather than only in the yellow panel. Panel still has regenerate. Visual difference from legacy: extra bottom chrome (Reset All, play/pause/step/speed).
 - Legacy had no “درباره‌ی مدل” or Reset All confirm. Added by shell spec.
 
@@ -52,3 +52,25 @@ Logged during ports. Do not fix during a port except crashes. Each later fix nee
 ## Not ported yet
 
 - (none)
+
+## Fix-up pass (items 1–17)
+
+### Amorphous packing threshold
+
+Measured `amorphSites` + `minDistance` over seeds 1–20 (mulberry32): minD in [0.080985598369851, 0.08346923565931895], mean ≈ 0.08248. Placement target `MIN_PLACE = 0.66 * D ≈ 0.06286`; relax target `0.88 * D ≈ 0.08381`. The old test used `MIN_PLACE * 0.5 ≈ 0.031` which every run cleared by a large margin. The test now fails if any of those 20 seeds drops below `0.90 * measured min` (0.0728870385328659). Vibration can still push sites closer; the floor is post-relaxation packing only.
+
+### Listener hygiene
+
+- `core/shell.js`: `model.playing.link` ran again on every screen switch and was never removed. Now linked once per model (`playLinks[idx]`) and unlinked in `dispose`.
+- `sims/crystalline/view.js`: `model.temperature.link` for the temperature bar had no unlink. Named `onTemp` and unlinked in `dispose`.
+- `sims/crystalline-3d/view.js`: same temperature-bar leak; unlinked in `dispose` (same class of bug as crystalline 2D).
+- `sims/u-tube/view.js`: six `lazyLink(syncPanel)` calls had no unlink. Tracked and unlinked in `dispose`.
+- Already paired (unchanged): `core/widgets.js` (all `link` have dispose unlink); `sims/hydrostatic/view.js` `model.rho.link(syncLiq)`; `sims/surface-tension/view.js` capMode/liquid link and lazyLink. Model-lifetime links (`u-tube` `caseIndex.lazyLink(applyCase)`, `crystalline-3d` `cellIndex.lazyLink`) stay for the model lifetime.
+
+### U-tube equation vs reference level
+
+`solveUnknown(refY)` now takes the reference (default 0) and identifies the unknown by `(arm, index)`. The equation step in `sims/u-tube/view.js` builds formulas from `layersAbove(..., model.ref.value)` so the overlay follows the purple line, but it still hides the unknown by comparing that slice height to the full `unkH()`. If the student moves the reference off the join, the unknown term may show a partial number instead of `؟`. View left unchanged.
+
+### Oil density naming
+
+Hydrostatic oil is 800 kg/m³; u-tube oil is 920. Kept both densities. Smaller UI change: hydrostatic string `sim.hydrostatic.oil` is now «روغن سبک»; u-tube stays «روغن».

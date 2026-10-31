@@ -18,30 +18,58 @@ function listSimIndex() {
   return out;
 }
 
+function scripts(html) {
+  const srcRe = /<script\s+src="([^"]+)"/g;
+  const srcs = [];
+  var m;
+  srcRe.lastIndex = 0;
+  while ((m = srcRe.exec(html))) srcs.push(m[1]);
+  return srcs;
+}
+
+function between(html, start, end) {
+  var i0 = html.indexOf(start);
+  var i1 = html.indexOf(end);
+  assert.ok(i0 !== -1 && i1 !== -1 && i1 > i0, 'run npm run sync-pages');
+  return html.slice(i0, i1 + end.length);
+}
+
 describe('pages', () => {
   it('sim index pages load core in manifest order and have no modules or forbidden URLs', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'core/manifest.json'), 'utf8'));
     const pages = listSimIndex();
     assert.ok(pages.length >= 1);
-    var i, j, html, src, expected, m, rel, abs;
-    const srcRe = /<script\s+src="([^"]+)"/g;
+    var i, j, html, src, expected, rel, abs, coreHtml, sharedHtml, simHtml, srcs, coreSrcs, sharedSrcs;
     const urlRe = /https?:\/\//g;
     for (i = 0; i < pages.length; i++) {
       html = fs.readFileSync(pages[i], 'utf8');
       assert.ok(html.indexOf('type="module"') === -1, pages[i] + ' has module');
-      const srcs = [];
-      srcRe.lastIndex = 0;
-      while ((m = srcRe.exec(html))) srcs.push(m[1]);
+      srcs = scripts(html);
       expected = [];
-      for (j = 0; j < manifest.length; j++) {
-        expected.push('../../' + manifest[j]);
+      for (j = 0; j < manifest.length; j++) expected.push('../../' + manifest[j]);
+      coreHtml = between(html, '<!-- core:start -->', '<!-- core:end -->');
+      coreSrcs = scripts(coreHtml);
+      assert.deepStrictEqual(coreSrcs, expected, pages[i] + ': run npm run sync-pages');
+      sharedHtml = between(html, '<!-- shared:start -->', '<!-- shared:end -->');
+      sharedSrcs = scripts(sharedHtml);
+      for (j = 0; j < sharedSrcs.length; j++) {
+        abs = path.normalize(path.join(path.dirname(pages[i]), sharedSrcs[j]));
+        assert.ok(fs.existsSync(abs), 'missing shared ' + abs);
+        assert.ok(sharedSrcs[j].indexOf('../../shared/') === 0, pages[i] + ' shared path');
       }
-      assert.deepStrictEqual(srcs.slice(0, expected.length), expected, pages[i] + ' core order');
+      simHtml = between(html, '<!-- sim:start -->', '<!-- sim:end -->');
+      var corePos = html.indexOf('<!-- core:start -->');
+      var sharedPos = html.indexOf('<!-- shared:start -->');
+      var simPos = html.indexOf('<!-- sim:start -->');
+      assert.ok(corePos < sharedPos && sharedPos < simPos, pages[i] + ' marker order');
+      if (sharedSrcs.length) {
+        var stringsIdx = srcs.indexOf('strings.js');
+        var lastShared = srcs.indexOf(sharedSrcs[sharedSrcs.length - 1]);
+        assert.ok(lastShared !== -1 && stringsIdx !== -1 && lastShared < stringsIdx, pages[i] + ' shared before strings.js');
+      }
       for (j = 0; j < srcs.length; j++) {
         src = srcs[j];
-        if (/^(https?:)?\/\//.test(src)) {
-          assert.fail('remote script ' + src);
-        }
+        if (/^(https?:)?\/\//.test(src)) assert.fail('remote script ' + src);
         rel = src;
         abs = path.normalize(path.join(path.dirname(pages[i]), rel));
         assert.ok(fs.existsSync(abs), 'missing ' + abs);
@@ -53,6 +81,17 @@ describe('pages', () => {
         assert.ok(slice.indexOf('http://www.w3.org/2000/svg') !== -1, 'forbidden URL in ' + pages[i] + ': ' + slice);
       }
     }
+  });
+
+  it('catalog core tags match the manifest', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'core/manifest.json'), 'utf8'));
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const coreHtml = between(html, '<!-- core:start -->', '<!-- core:end -->');
+    const expected = manifest.map(function (f) { return f; });
+    assert.deepStrictEqual(scripts(coreHtml), expected, 'run npm run sync-pages');
+    assert.ok(html.indexOf('data/topics.js') !== -1);
+    assert.ok(html.indexOf('data/registry.js') !== -1);
+    assert.ok(html.indexOf('data/topics.js') < html.indexOf('data/registry.js'));
   });
 
   it('source files outside tests/tools have no forbidden URLs', () => {

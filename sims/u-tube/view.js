@@ -133,6 +133,7 @@
     var canvas, readout, probe, widgets, dpr = 1, geo = null;
     var hoverH = null, meas = null, drag = null;
     var els = {};
+    var unsubs = [];
 
     function drawArm(ctx, x, g, arm, d, hideI) {
       var y = g.yJoin, i, y2, hide;
@@ -553,12 +554,17 @@
         els.ust.className = 'vis-state ok';
         panel.appendChild(els.ust);
 
-        model.caseIndex.lazyLink(syncPanel);
-        model.phase.lazyLink(syncPanel);
-        model.g.lazyLink(syncPanel);
-        model.compared.lazyLink(syncPanel);
-        model.valid.lazyLink(syncPanel);
-        model.revealed.lazyLink(syncPanel);
+        unsubs = [];
+        function track(prop) {
+          prop.lazyLink(syncPanel);
+          unsubs.push(function () { prop.unlink(syncPanel); });
+        }
+        track(model.caseIndex);
+        track(model.phase);
+        track(model.g);
+        track(model.compared);
+        track(model.valid);
+        track(model.revealed);
         syncPanel();
       },
       layout: function (w, h, nextDpr) {
@@ -576,6 +582,9 @@
         syncPanel();
       },
       dispose: function () {
+        var i;
+        for (i = 0; i < unsubs.length; i++) unsubs[i]();
+        unsubs = [];
         canvas = readout = probe = null;
         els = {};
         widgets = [];

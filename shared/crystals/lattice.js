@@ -187,7 +187,8 @@
     return n;
   }
 
-  PL.lattice = {
+  PL.shared = PL.shared || {};
+  PL.shared.crystals = {
     dist: dist,
     minDistance: minDistance,
     pack2d: pack2d,

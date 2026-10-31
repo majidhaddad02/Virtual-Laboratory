@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جامد بلورین و بی‌شکل</title>
+<link rel="stylesheet" href="../css/phet.css">
+</head>
+<body class="sim-app">
+<header class="sim-top">
+  <a href="../index.html">
+    <svg width="28" height="28" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#521764"/><circle cx="32" cy="32" r="22" fill="#f5d547"/></svg>
+    فیزیک‌لب
+  </a>
+  <h1>جامد بلورین و بی‌شکل</h1>
+  <span></span>
+</header>
+<div class="sim-body">
+  <div class="sim-stage">
+    <div class="stage-grid two">
+      <section class="view">
+        <span class="badge cry">بلورین</span>
+        <canvas id="c1"></canvas>
+      </section>
+      <section class="view">
+        <span class="badge amo">بی‌شکل</span>
+        <canvas id="c2"></canvas>
+      </section>
+    </div>
+  </div>
+  <aside class="sim-panel">
+    <div class="box">
+      <h3>دما</h3>
+      <input type="range" id="T" min="0" max="100" value="35">
+      <div class="meters"><div class="bar"><i id="tb" style="background:#e07a1f;width:35%"></i></div></div>
+    </div>
+    <div class="box">
+      <h3>نمایش</h3>
+      <label><input type="checkbox" id="bonds" checked> پیوندها</label>
+    </div>
+    <div class="tools">
+      <button class="ico-btn" id="pause" title="توقف">
+        <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+      </button>
+      <button class="ico-btn reset" id="regen" title="چیدمان جدید">
+        <svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg>
+      </button>
+    </div>
+  </aside>
+</div>
+<script>
+(function(){
+var D=1/10.5, COLS=10, ROWS=11, N=COLS*ROWS;
+var RMS_MAX=0.09*D, K=400, G=8, DT=1/120;
+function crystalSites(){
+  var s=[], y0=(1-8.66*D)/2;
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)
+    s.push([D*(c+0.75+0.5*(r&1)), y0+D*0.866*r]);
+  return s;
+}
+function amorphSites(){
+  var pts=[], m=0.06, minD=0.66*D, tries=0;
+  while(pts.length<N && tries<200000){
+    tries++;
+    var x=m+Math.random()*(1-2*m), y=m+Math.random()*(1-2*m), ok=true;
+    for(var i=0;i<pts.length;i++){var a=pts[i][0]-x,b=pts[i][1]-y;if(a*a+b*b<minD*minD){ok=false;break;}}
+    if(ok)pts.push([x,y]);
+  }
+  while(pts.length<N)pts.push([m+Math.random()*(1-2*m),m+Math.random()*(1-2*m)]);
+  for(var it=0;it<60;it++){
+    for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
+      var dx=pts[j][0]-pts[i][0],dy=pts[j][1]-pts[i][1],d=Math.hypot(dx,dy),t=0.88*D;
+      if(d<t&&d>1e-9){var f=(t-d)/d*0.25;
+        pts[i][0]-=dx*f;pts[i][1]-=dy*f;pts[j][0]+=dx*f;pts[j][1]+=dy*f;}
+    }
+    for(var i=0;i<N;i++){pts[i][0]=Math.min(1-m,Math.max(m,pts[i][0]));pts[i][1]=Math.min(1-m,Math.max(m,pts[i][1]));}
+  }
+  return pts;
+}
+function build(sites){
+  var p=sites.map(function(s){return{x:s[0],y:s[1],dx:0,dy:0,vx:0,vy:0};}), b=[];
+  for(var i=0;i<N;i++)for(var j=i+1;j<N;j++)
+    if(Math.hypot(p[i].x-p[j].x,p[i].y-p[j].y)<1.3*D)b.push([i,j]);
+  return{p:p,b:b};
+}
+var sys=[build(crystalSites()),build(amorphSites())];
+var cv=[document.getElementById('c1'),document.getElementById('c2')];
+var T=35, running=true, showB=true;
+function gauss(){var u=1-Math.random(),v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function step(s){
+  var rms=RMS_MAX*Math.sqrt(T/100), kT=K*rms*rms, sig=Math.sqrt(2*G*kT*DT);
+  for(var i=0;i<N;i++){var q=s.p[i];
+    q.vx+=(-K*q.dx-G*q.vx)*DT+sig*gauss();
+    q.vy+=(-K*q.dy-G*q.vy)*DT+sig*gauss();
+    q.dx+=q.vx*DT; q.dy+=q.vy*DT;
+  }
+}
+function fit(){
+  var dpr=window.devicePixelRatio||1;
+  cv.forEach(function(c){var r=c.getBoundingClientRect();c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);});
+}
+function draw(){
+  var cols=['#1565c0','#e07a1f'];
+  for(var k=0;k<2;k++){
+    var c=cv[k],ctx=c.getContext('2d'),W=c.width,H=c.height,s=sys[k];
+    ctx.clearRect(0,0,W,H);
+    var S=Math.min(W,H)*0.92, ox=(W-S)/2, oy=(H-S)/2;
+    ctx.fillStyle=cols[k];ctx.strokeStyle=cols[k];
+    if(showB){
+      ctx.globalAlpha=.38;ctx.lineWidth=Math.max(1.5,W/240);ctx.beginPath();
+      for(var i=0;i<s.b.length;i++){var a=s.p[s.b[i][0]],b=s.p[s.b[i][1]];
+        ctx.moveTo(ox+(a.x+a.dx)*S,oy+(a.y+a.dy)*S);ctx.lineTo(ox+(b.x+b.dx)*S,oy+(b.y+b.dy)*S);}
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    for(var i=0;i<N;i++){
+      var q=s.p[i],x=ox+(q.x+q.dx)*S,y=oy+(q.y+q.dy)*S,r=0.3*D*S;
+      var g=ctx.createRadialGradient(x-r*0.3,y-r*0.3,r*0.1,x,y,r);
+      g.addColorStop(0,'#fff');g.addColorStop(0.35,cols[k]);g.addColorStop(1,k? '#9a4a00':'#0d3a78');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();
+    }
+  }
+}
+function loop(){
+  if(running){step(sys[0]);step(sys[1]);}
+  draw();requestAnimationFrame(loop);
+}
+var tIn=document.getElementById('T'),tb=document.getElementById('tb');
+tIn.addEventListener('input',function(){T=+tIn.value;tb.style.width=T+'%';});
+document.getElementById('bonds').addEventListener('change',function(e){showB=e.target.checked;});
+var pb=document.getElementById('pause'), paused=false;
+pb.addEventListener('click',function(){
+  running=!running;paused=!paused;
+  pb.innerHTML=running
+    ?'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
+    :'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+});
+document.getElementById('regen').addEventListener('click',function(){sys[1]=build(amorphSites());});
+window.addEventListener('resize',fit);
+fit();loop();
+})();
+</script>
+</body>
+</html>

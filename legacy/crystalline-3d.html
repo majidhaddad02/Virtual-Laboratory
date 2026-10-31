@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بلور سه‌بعدی</title>
+<link rel="stylesheet" href="../css/phet.css">
+</head>
+<body class="sim-app">
+<header class="sim-top">
+  <a href="../index.html">
+    <svg width="28" height="28" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#521764"/><circle cx="32" cy="32" r="22" fill="#f5d547"/></svg>
+    فیزیک‌لب
+  </a>
+  <h1>بلور سه‌بعدی و یاخته واحد</h1>
+  <span></span>
+</header>
+<div class="sim-body">
+  <div class="sim-stage dark">
+    <div class="stage-grid three">
+      <section class="view ghost">
+        <span class="badge cry">بلور مکعبی</span>
+        <canvas id="c1"></canvas>
+      </section>
+      <section class="view ghost">
+        <span class="badge acc">یاخته واحد</span>
+        <canvas id="c3"></canvas>
+      </section>
+      <section class="view ghost">
+        <span class="badge amo">بی‌شکل</span>
+        <canvas id="c2"></canvas>
+      </section>
+    </div>
+    <div class="hint">بکشید تا بچرخد</div>
+  </div>
+  <aside class="sim-panel">
+    <div class="box">
+      <h3>دما</h3>
+      <input type="range" id="T" min="0" max="100" value="30">
+      <div class="bar"><i id="tb" style="background:#e07a1f;width:30%"></i></div>
+    </div>
+    <div class="box">
+      <h3>نمایش</h3>
+      <label><input type="checkbox" id="bonds" checked> پیوندها</label>
+      <label><input type="checkbox" id="cell" checked> یاخته</label>
+      <label><input type="checkbox" id="spin" checked> چرخش</label>
+      <label><input type="checkbox" id="auto"> جابه‌جایی یاخته</label>
+    </div>
+    <div class="tools">
+      <button id="next">یاخته بعدی</button>
+      <button class="ico-btn" id="pause" title="توقف">
+        <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+      </button>
+      <button class="ico-btn reset" id="regen" title="چیدمان جدید">
+        <svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg>
+      </button>
+    </div>
+  </aside>
+</div>
+<script>
+(function(){
+var CAM=9, RMS_MAX=0.11, K=400, G=8, DT=1/120, N=64;
+var A={yaw:0.7,pitch:-0.5};
+var T=30, running=true, showB=true, showC=true, spin=true, auto=false, cellIdx=13, lastAuto=0;
+function crystalSites(){var s=[];for(var i=0;i<4;i++)for(var j=0;j<4;j++)for(var k=0;k<4;k++)s.push([i-1.5,j-1.5,k-1.5]);return s;}
+function cellSites(){var s=[];for(var i=0;i<2;i++)for(var j=0;j<2;j++)for(var k=0;k<2;k++)s.push([i-.5,j-.5,k-.5]);return s;}
+function dist(a,b){return Math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1])+(a[2]-b[2])*(a[2]-b[2]));}
+function amorphSites(){
+  var L=1.85,pts=[],tries=0,i,j,it,d;
+  function rnd(){return[(Math.random()*2-1)*L,(Math.random()*2-1)*L,(Math.random()*2-1)*L];}
+  while(pts.length<N&&tries<100000){tries++;var p=rnd(),ok=true;
+    for(i=0;i<pts.length;i++)if(dist(p,pts[i])<0.6){ok=false;break;}
+    if(ok)pts.push(p);}
+  while(pts.length<N)pts.push(rnd());
+  for(it=0;it<80;it++){
+    for(i=0;i<N;i++)for(j=i+1;j<N;j++){d=dist(pts[i],pts[j]);
+      if(d<0.85&&d>1e-9){var f=(0.85-d)/d*0.25;
+        for(var c=0;c<3;c++){var dd=(pts[j][c]-pts[i][c])*f;pts[i][c]-=dd;pts[j][c]+=dd;}}}
+    for(i=0;i<N;i++)for(var c=0;c<3;c++)pts[i][c]=Math.max(-L,Math.min(L,pts[i][c]));
+  }
+  return pts;
+}
+function build(sites,cut,scale,col){
+  var p=sites.map(function(s){return{x:s[0],y:s[1],z:s[2],dx:0,dy:0,dz:0,vx:0,vy:0,vz:0};}),b=[],n=p.length;
+  for(var i=0;i<n;i++)for(var j=i+1;j<n;j++)
+    if(dist([p[i].x,p[i].y,p[i].z],[p[j].x,p[j].y,p[j].z])<cut)b.push([i,j]);
+  return{p:p,b:b,scale:scale,col:col,hl:null,he:null};
+}
+var cry=build(crystalSites(),1.1,0.095,'#64b0ff');
+var amo=build(amorphSites(),1.2,0.095,'#ffb347');
+var cel=build(cellSites(),1.1,0.30,'#64b0ff');
+cel.hl={};cel.he=[];for(var q=0;q<8;q++)cel.hl[q]=true;for(q=0;q<cel.b.length;q++)cel.he.push(true);
+cel.always=true;
+function setCell(idx){
+  cellIdx=idx;var cx=Math.floor(idx/9),cy=Math.floor(idx/3)%3,cz=idx%3,set={};
+  for(var a=0;a<2;a++)for(var b=0;b<2;b++)for(var c=0;c<2;c++)set[(cx+a)*16+(cy+b)*4+(cz+c)]=true;
+  cry.hl=set;cry.he=cry.b.map(function(e){return !!(set[e[0]]&&set[e[1]]);});
+}
+setCell(cellIdx);
+function gauss(){var u=1-Math.random(),v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function step(s){
+  var rms=RMS_MAX*Math.sqrt(T/100),sig=Math.sqrt(2*G*K*rms*rms*DT);
+  for(var i=0;i<s.p.length;i++){var q=s.p[i];
+    q.vx+=(-K*q.dx-G*q.vx)*DT+sig*gauss();q.vy+=(-K*q.dy-G*q.vy)*DT+sig*gauss();q.vz+=(-K*q.dz-G*q.vz)*DT+sig*gauss();
+    q.dx+=q.vx*DT;q.dy+=q.vy*DT;q.dz+=q.vz*DT;}
+}
+function rot(x,y,z){
+  var cy=Math.cos(A.yaw),sy=Math.sin(A.yaw),cp=Math.cos(A.pitch),sp=Math.sin(A.pitch);
+  var x1=cy*x+sy*z,z1=-sy*x+cy*z;
+  return[x1,cp*y-sp*z1,sp*y+cp*z1];
+}
+function render(s,c){
+  var ctx=c.getContext('2d'),W=c.width,H=c.height,S=s.scale*Math.min(W,H),P=[],i,e;
+  ctx.clearRect(0,0,W,H);
+  var col=s.col,acc='#ff6fa8';
+  for(i=0;i<s.p.length;i++){var q=s.p[i],r=rot(q.x+q.dx,q.y+q.dy,q.z+q.dz),f=CAM/(CAM+r[2]);
+    P.push({x:W/2+r[0]*f*S,y:H/2-r[1]*f*S,z:r[2],f:f});}
+  var useHl=s.hl&&(showC||s.always);
+  ctx.lineCap='round';
+  if(showB){
+    ctx.strokeStyle=col;ctx.globalAlpha=.42;ctx.lineWidth=Math.max(1.4,W/260);ctx.beginPath();
+    for(i=0;i<s.b.length;i++){if(useHl&&s.he[i])continue;e=s.b[i];ctx.moveTo(P[e[0]].x,P[e[0]].y);ctx.lineTo(P[e[1]].x,P[e[1]].y);}
+    ctx.stroke();
+  }
+  if(useHl){
+    ctx.strokeStyle=acc;ctx.globalAlpha=1;ctx.lineWidth=Math.max(2.2,W/100);ctx.beginPath();
+    for(i=0;i<s.b.length;i++){if(!s.he[i])continue;e=s.b[i];ctx.moveTo(P[e[0]].x,P[e[0]].y);ctx.lineTo(P[e[1]].x,P[e[1]].y);}
+    ctx.stroke();
+  }
+  var ord=P.map(function(_,k){return k;}).sort(function(a,b){return P[b].z-P[a].z;});
+  for(var n=0;n<ord.length;n++){i=ord[n];var p=P[i],h=useHl&&s.hl[i];
+    var rad=(h?0.22:0.16)*S*p.f;
+    var g=ctx.createRadialGradient(p.x-rad*.3,p.y-rad*.3,rad*.15,p.x,p.y,rad);
+    var base=h?acc:col;
+    g.addColorStop(0,'#fff');g.addColorStop(.4,base);g.addColorStop(1,'#1a2030');
+    ctx.globalAlpha=Math.max(0.45,Math.min(1,0.8-p.z*0.18));
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,rad,0,6.2832);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+var cvs=[document.getElementById('c1'),document.getElementById('c2'),document.getElementById('c3')];
+function fit(){var d=window.devicePixelRatio||1;cvs.forEach(function(c){var r=c.getBoundingClientRect();c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);});}
+function loop(t){
+  if(running){step(cry);step(amo);step(cel);}
+  if(spin&&!dragging)A.yaw+=0.004;
+  if(auto&&t-lastAuto>1500){lastAuto=t;setCell((cellIdx+1)%27);}
+  render(cry,cvs[0]);render(amo,cvs[1]);render(cel,cvs[2]);
+  requestAnimationFrame(loop);
+}
+var dragging=false,lx=0,ly=0;
+cvs.forEach(function(c){
+  c.addEventListener('pointerdown',function(e){dragging=true;lx=e.clientX;ly=e.clientY;c.setPointerCapture(e.pointerId);});
+  c.addEventListener('pointermove',function(e){if(!dragging)return;A.yaw+=(e.clientX-lx)*0.01;A.pitch=Math.max(-1.5,Math.min(1.5,A.pitch+(e.clientY-ly)*0.01));lx=e.clientX;ly=e.clientY;});
+  c.addEventListener('pointerup',function(){dragging=false;});
+  c.addEventListener('pointercancel',function(){dragging=false;});
+});
+var $=function(id){return document.getElementById(id);};
+$('T').addEventListener('input',function(e){T=+e.target.value;$('tb').style.width=T+'%';});
+$('bonds').addEventListener('change',function(e){showB=e.target.checked;});
+$('cell').addEventListener('change',function(e){showC=e.target.checked;});
+$('spin').addEventListener('change',function(e){spin=e.target.checked;});
+$('auto').addEventListener('change',function(e){auto=e.target.checked;});
+$('next').addEventListener('click',function(){setCell((cellIdx+1)%27);});
+$('pause').addEventListener('click',function(){
+  running=!running;
+  $('pause').innerHTML=running
+    ?'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
+    :'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+});
+$('regen').addEventListener('click',function(){amo=build(amorphSites(),1.2,0.095,'#ffb347');});
+window.addEventListener('resize',fit);
+fit();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[
+  "core/ns.js",
+  "core/property.js",
+  "core/math.js",
+  "core/lattice.js",
+  "core/format.js",
+  "core/i18n.js",
+  "core/loop.js",
+  "core/draw.js",
+  "core/widgets.js",
+  "core/dialogs.js",
+  "core/shell.js"
+]

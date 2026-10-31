@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کشش سطحی و موئینگی</title>
+<link rel="stylesheet" href="../css/phet.css">
+</head>
+<body class="sim-app">
+<header class="sim-top">
+  <a href="../index.html">
+    <svg width="28" height="28" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#521764"/><circle cx="32" cy="32" r="22" fill="#f5d547"/></svg>
+    فیزیک‌لب
+  </a>
+  <h1>کشش سطحی و موئینگی</h1>
+  <span></span>
+</header>
+<nav class="sim-tabs" id="tabs">
+  <button class="on" data-t="0">مولکول‌ها</button>
+  <button data-t="1">سوزن</button>
+  <button data-t="2">قطره</button>
+  <button data-t="3">موئینگی</button>
+  <button data-t="4">مقایسه</button>
+</nav>
+<div class="sim-body">
+  <div class="sim-stage lab" id="stage">
+    <canvas id="cv" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+    <div class="compare" id="cmp" style="display:none;position:relative;z-index:1">
+      <section class="view">
+        <span class="badge amo">مومی</span>
+        <canvas id="m0"></canvas>
+      </section>
+      <section class="view">
+        <span class="badge cry">شیشه</span>
+        <canvas id="m1"></canvas>
+      </section>
+      <section class="view">
+        <span class="badge" style="color:#2b8a3e">آب‌دوست</span>
+        <canvas id="m2"></canvas>
+      </section>
+    </div>
+  </div>
+  <aside class="sim-panel" id="panel"></aside>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+function arrow(ctx,x0,y0,x1,y1,col,lw,hs){
+  var a=Math.atan2(y1-y0,x1-x0);ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1-Math.cos(a)*hs*0.6,y1-Math.sin(a)*hs*0.6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-hs*Math.cos(a-0.42),y1-hs*Math.sin(a-0.42));ctx.lineTo(x1-hs*Math.cos(a+0.42),y1-hs*Math.sin(a+0.42));ctx.closePath();ctx.fill();
+}
+function fitAll(){
+  var d=window.devicePixelRatio||1;
+  [].forEach.call(document.querySelectorAll('canvas'),function(c){
+    var r=c.getBoundingClientRect();
+    c.width=Math.round(Math.max(1,r.width)*d);
+    c.height=Math.round(Math.max(1,r.height)*d);
+  });
+}
+var tab=0;
+var S={dep:3,coh:1,allsurf:false,nm:0.25,soap:false,adh:0.75,cth:10,cs:10,liq:'water',capMode:'radii',dropHg:false};
+var nd={sunk:false,y:0,vy:0};
+var RADII=[0.5,1,2];
+var hcurW=[0,0,0],hcurM=[0,0,0];
+var TYP=[130,30,5];
+var LIQ={
+  water:{g:0.072,rho:1000,th:10,fill:'#4a90e2',stroke:'#2b6cb0',light:'#c5e6ff',dark:'#1e4e86',name:'آب'},
+  mercury:{g:0.485,rho:13600,th:140,fill:'#9aa3ad',stroke:'#4a5158',light:'#e8edf2',dark:'#2f353c',name:'جیوه'}
+};
+function thetaFromS(s){return s>=1?0:Math.acos(2*s-1)*180/Math.PI;}
+function hT(r,th,liq){var L=LIQ[liq||'water'];return 2*L.g*Math.cos(th*Math.PI/180)/(L.rho*9.8*(r/1000))*1000;}
+function resetH(){hcurW=[0,0,0];hcurM=[0,0,0];}
+
+function panels(){
+  var p=$('panel');
+  if(tab===0)p.innerHTML=
+    '<div class="box"><h3>عمق</h3><input type="range" id="dep" min="0" max="3" step="1" value="'+S.dep+'">'+
+    '<div class="legend-dots" id="depl"></div></div>'+
+    '<div class="box"><h3>هم‌چسبی</h3><input type="range" id="coh" min="0.5" max="2" step="0.05" value="'+S.coh+'">'+
+    '<div class="bar"><i id="g1" style="background:#4a90e2"></i></div></div>'+
+    '<div class="box"><label><input type="checkbox" id="allsurf"'+(S.allsurf?' checked':'')+'> نیروی سطح</label></div>'+
+    '<div class="vis-state" id="st0"></div>';
+  if(tab===1)p.innerHTML=
+    '<div class="box"><h3>جرم سوزن</h3><input type="range" id="nm" min="0.1" max="0.6" step="0.01" value="'+S.nm+'">'+
+    '<div class="meters"><span>بالابر</span><div class="bar"><i id="nfb" style="background:#2e86c1"></i></div>'+
+    '<span>وزن</span><div class="bar"><i id="nwb" style="background:#c92a2a"></i></div></div></div>'+
+    '<div class="box"><label><input type="checkbox" id="soap"'+(S.soap?' checked':'')+'> صابون</label></div>'+
+    '<div class="tools"><button class="ico-btn reset" id="nre"><svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg></button></div>'+
+    '<div class="vis-state" id="st1"></div>';
+  if(tab===2)p.innerHTML=
+    '<div class="box"><h3>دگرچسبی</h3><input type="range" id="adh" min="0" max="1.1" step="0.01" value="'+S.adh+'">'+
+    '<span>هم‌چسبی</span><div class="bar"><i id="bcoh" style="background:#4a90e2"></i></div>'+
+    '<span>دگرچسبی</span><div class="bar"><i id="badh" style="background:#f08c00"></i></div></div>'+
+    '<div class="tools"><button class="pre" data-th="130">مومی</button><button class="pre" data-th="30">شیشه</button><button class="pre" data-th="5">آب‌دوست</button><button class="pre" data-th="140" data-hg="1">جیوه</button></div>'+
+    '<div class="vis-state" id="st2"></div>';
+  if(tab===3)p.innerHTML=
+    '<div class="box"><h3>نمایش</h3><div class="liq-toggle">'+
+    '<button type="button" class="'+(S.capMode==='radii'?'on mode':'')+'" data-mode="radii">شعاع‌ها</button>'+
+    '<button type="button" class="'+(S.capMode==='compare'?'on mode':'')+'" data-mode="compare">آب و جیوه</button>'+
+    '</div></div>'+
+    (S.capMode==='radii'
+      ? '<div class="box"><h3>مایع</h3><div class="liq-toggle">'+
+        '<button type="button" class="'+(S.liq==='water'?'on water':'')+'" data-liq="water">آب</button>'+
+        '<button type="button" class="'+(S.liq==='mercury'?'on hg':'')+'" data-liq="mercury">جیوه</button></div></div>'+
+        '<div class="box"><h3>زاویه تماس</h3><input type="range" id="cth" min="0" max="180" step="1" value="'+S.cth+'">'+
+        (S.liq==='water'
+          ? '<select id="cs"><option value="10">شیشه</option><option value="0">آب‌دوست</option><option value="110">مومی</option></select>'
+          : '<select id="cs"><option value="140">شیشه</option></select>')+
+        '</div>'
+      : '<div class="box"><h3>شیشه</h3><div class="legend-dots">'+
+        '<span><b style="background:#4a90e2"></b>آب · هلال مقعر</span>'+
+        '<span><b style="background:#8b949e"></b>جیوه · هلال محدب</span></div></div>')+
+    '<div class="legend-dots"><span><b style="background:#2e86c1"></b>کشش دیواره</span><span><b style="background:#c92a2a"></b>وزن ستون</span></div>'+
+    '<div class="tools"><button class="ico-btn reset" id="crs"><svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg></button></div>'+
+    '<div class="vis-state" id="st3"></div>'+
+    (S.capMode==='compare'?'<div class="vis-state" id="st3b"></div>':'');
+  if(tab===4)p.innerHTML=
+    '<div class="box"><h3>سه سطح</h3><div class="legend-dots">'+
+    '<span><b style="background:#e07a1f"></b>مومی</span>'+
+    '<span><b style="background:#1565c0"></b>شیشه</span>'+
+    '<span><b style="background:#2b8a3e"></b>آب‌دوست</span></div></div>'+
+    '<div class="vis-state ok" id="st4">حجم یکسان</div>';
+  bind();
+}
+function bind(){
+  function n(id,k){var e=$(id);if(!e)return;e.oninput=function(){S[k]=+e.value;};}
+  n('dep','dep');n('coh','coh');n('nm','nm');n('cth','cth');
+  if($('adh'))$('adh').oninput=function(){S.adh=+$('adh').value;S.dropHg=false;};
+  if($('allsurf'))$('allsurf').onchange=function(e){S.allsurf=e.target.checked;};
+  if($('soap'))$('soap').onchange=function(e){S.soap=e.target.checked;};
+  if($('nre'))$('nre').onclick=function(){nd.sunk=false;nd.y=0;nd.vy=0;};
+  if($('crs'))$('crs').onclick=function(){resetH();};
+  if($('cs')){$('cs').value=String(S.cs);$('cs').onchange=function(){S.cs=+$('cs').value;S.cth=S.cs;if($('cth'))$('cth').value=S.cth;resetH();};}
+  [].forEach.call(document.querySelectorAll('[data-mode]'),function(b){
+    b.onclick=function(){S.capMode=b.getAttribute('data-mode');resetH();panels();};
+  });
+  [].forEach.call(document.querySelectorAll('[data-liq]'),function(b){
+    b.onclick=function(){
+      S.liq=b.getAttribute('data-liq');
+      S.cth=LIQ[S.liq].th;S.cs=S.cth;resetH();panels();
+    };
+  });
+  [].forEach.call(document.querySelectorAll('.pre'),function(b){
+    b.onclick=function(){
+      var th=+b.getAttribute('data-th');
+      S.dropHg=b.getAttribute('data-hg')==='1';
+      S.adh=Math.min(1.1,(1+Math.cos(th*Math.PI/180))/2);
+      if($('adh'))$('adh').value=S.adh;
+    };
+  });
+}
+
+function drawCap(ctx,W,H,d,theta,A,base,withArc,cx,hg){
+  var ys=base;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#c8b48a';ctx.fillRect(0,ys,W,H-ys);
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=d;ctx.beginPath();
+  for(var k=-H;k<W;k+=14*d){ctx.moveTo(k,H);ctx.lineTo(k+(H-ys),ys);}ctx.stroke();
+  var th=Math.max(theta,0.09),sn=Math.sin(th),cs=Math.cos(th),R=Math.sqrt(A/(th-sn*cs)),yc=ys+R*cs;
+  var aR=Math.atan2(-cs,sn),aL=Math.atan2(-cs,-sn);
+  ctx.save();ctx.beginPath();ctx.rect(0,0,W,ys+1);ctx.clip();
+  var g=ctx.createRadialGradient(cx,ys-20*d,10*d,cx,ys,R);
+  if(hg){g.addColorStop(0,'#e8edf2');g.addColorStop(1,'#4a5158');}
+  else{g.addColorStop(0,'#9fd0f5');g.addColorStop(1,'#2b6cb0');}
+  ctx.fillStyle=g;ctx.strokeStyle=hg?'#2f353c':'#1e4e86';ctx.lineWidth=2*d;
+  ctx.beginPath();ctx.arc(cx,yc,R,aR,aL,true);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  if(withArc){
+    var px=cx+R*sn,py=ys,tx=sn,ty=-cs,tang=Math.atan2(ty,tx);if(tang<0)tang+=6.2832;
+    if(px<W-20*d&&px>20*d){ctx.strokeStyle='#f08c00';ctx.lineWidth=4*d;ctx.beginPath();ctx.arc(px,py,26*d,Math.PI,Math.max(Math.PI,tang),false);ctx.stroke();}
+  }
+}
+
+function scene0(ctx,W,H,d){
+  var depth=S.dep,coh=S.coh;
+  if($('g1'))$('g1').style.width=(coh/2*100)+'%';
+  if($('depl'))$('depl').innerHTML=['سطح','یک لایه پایین','دو لایه پایین','عمق'][depth];
+  var D=W*0.065,ys=H*0.32,yb=ys-D*0.5,nc=Math.ceil(W/D)+2,nr=Math.ceil((H-ys)/(D*0.866))+1,pts=[],i,k;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(74,144,226,.22)';ctx.fillRect(0,yb,W,H-yb);
+  ctx.strokeStyle='#4a90e2';ctx.lineWidth=4*d;ctx.beginPath();ctx.moveTo(0,yb);ctx.lineTo(W,yb);ctx.stroke();
+  for(k=0;k<nr;k++)for(i=0;i<nc;i++)pts.push({x:W/2+(i-Math.floor(nc/2))*D+(k&1)*D/2,y:ys+k*D*0.866,k:k,i:i});
+  var hl=null;for(i=0;i<pts.length;i++)if(pts[i].k===depth&&pts[i].i===Math.floor(nc/2))hl=pts[i];
+  var rr=D*0.3;
+  for(i=0;i<pts.length;i++){var p=pts[i];if(p.x<-D||p.x>W+D)continue;
+    var g=ctx.createRadialGradient(p.x-rr*.3,p.y-rr*.3,1,p.x,p.y,rr);
+    if(p===hl){g.addColorStop(0,'#fff');g.addColorStop(1,'#f08c00');}
+    else{g.addColorStop(0,'#d6ecff');g.addColorStop(1,'#3a7fc4');}
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,(p===hl)?rr*1.28:rr,0,6.2832);ctx.fill();}
+  if(S.allsurf){
+    for(i=0;i<pts.length;i++){var q=pts[i];if(q.k!==0||q.x<0||q.x>W)continue;
+      arrow(ctx,q.x,q.y,q.x,q.y+D*0.5*coh,'rgba(201,42,42,.55)',2*d,7*d);}
+  }
+  var sx=0,sy=0,n=0,len=D*(0.45+0.25*coh);
+  for(i=0;i<pts.length;i++){var p2=pts[i];if(p2===hl)continue;var dx=p2.x-hl.x,dy=p2.y-hl.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<D*1.05){n++;sx+=dx/dist;sy+=dy/dist;arrow(ctx,hl.x,hl.y,hl.x+dx/dist*len,hl.y+dy/dist*len,'#6b7785',2.5*d,9*d);}}
+  var mag=Math.sqrt(sx*sx+sy*sy);
+  if(mag>0.05){arrow(ctx,hl.x,hl.y,hl.x+sx/mag*mag*D*0.5*coh,hl.y+sy/mag*mag*D*0.5*coh,'#c92a2a',5*d,15*d);}
+  var st=$('st0');
+  if(st){st.className='vis-state '+(mag>0.05?'bad':'ok');st.textContent=mag>0.05?'برآیند به درون':'برآیند صفر';}
+}
+
+function scene1(ctx,W,H,d){
+  var soap=S.soap,m=S.nm,gam=0.072*(soap?0.4:1),L=0.035;
+  var F=2*gam*L*1000,Wt=m*1e-3*9.8*1000,ratio=Wt/F;
+  if($('nfb'))$('nfb').style.width=Math.min(100,F/6*100)+'%';
+  if($('nwb'))$('nwb').style.width=Math.min(100,Wt/6*100)+'%';
+  if(ratio>1)nd.sunk=true;
+  var y0=H*0.42,cx=W/2,rr=Math.max(10,H*0.05),depth=nd.sunk?0:Math.min(ratio,1)*rr*3.2,s=rr*3.4;
+  ctx.clearRect(0,0,W,H);
+  function surf(x){return y0+depth*Math.exp(-Math.pow((x-cx)/s,2));}
+  ctx.fillStyle='rgba(74,144,226,.45)';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,surf(0));
+  for(var x=0;x<=W;x+=4)ctx.lineTo(x,surf(x));ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#2b6cb0';ctx.lineWidth=3*d;ctx.beginPath();for(x=0;x<=W;x+=4){if(x===0)ctx.moveTo(x,surf(x));else ctx.lineTo(x,surf(x));}ctx.stroke();
+  var ny;
+  if(nd.sunk){nd.vy+=0.35*d;nd.y=Math.min(nd.y+nd.vy,H-rr-4*d);ny=y0-rr*0.2+nd.y;}else{nd.y=0;nd.vy=0;ny=y0+depth-rr*0.25;}
+  var g=ctx.createRadialGradient(cx-rr*.3,ny-rr*.3,2,cx,ny,rr);
+  g.addColorStop(0,'#cfd4da');g.addColorStop(1,'#4a5158');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,ny,rr,0,6.2832);ctx.fill();
+  if(!nd.sunk){
+    var phi=Math.asin(Math.min(1,ratio)),len=Math.max(24*d,F*14*d);
+    [-1,1].forEach(function(sg){arrow(ctx,cx+sg*rr*1.5,ny+rr*0.6,cx+sg*rr*1.5+sg*Math.cos(phi)*len,ny+rr*0.6-Math.sin(phi)*len,'#2e86c1',3*d,11*d);});
+    arrow(ctx,cx,ny,cx,ny+Wt*14*d+20*d,'#c92a2a',3*d,11*d);
+  }
+  var v=$('st1');
+  if(v){v.className='vis-state '+(nd.sunk?'bad':'ok');v.textContent=nd.sunk?'غرق':'شناور';}
+}
+
+function scene2(ctx,W,H,d){
+  var s=S.adh,th=thetaFromS(s);
+  var A=Math.PI/2*Math.pow(H*0.22,2);
+  drawCap(ctx,W,H,d,th*Math.PI/180,A,H*0.78,true,W/2,S.dropHg);
+  if($('bcoh'))$('bcoh').style.width=(1/1.1*100)+'%';
+  if($('badh'))$('badh').style.width=(s/1.1*100)+'%';
+  var st=$('st2');
+  if(st){st.className='vis-state '+(th>=90?'bad':'ok');st.textContent=S.dropHg?'جیوه · محدب':(th>=90?'جمع شده':'پخش شده');}
+}
+
+function drawMeniscusFill(ctx,xl,xr,cx,y0,yE,yCtl,ybot,up,L,d){
+  var g=ctx.createLinearGradient(xl,0,xr,0);
+  g.addColorStop(0,L.dark);g.addColorStop(0.35,L.light);g.addColorStop(1,L.fill);
+  ctx.beginPath();
+  if(!up){
+    ctx.fillStyle='#efe6d2';ctx.fillRect(xl,y0-2*d,xr-xl,Math.max(yE,y0)-y0+4*d);
+    ctx.fillStyle=g;ctx.globalAlpha=0.92;
+    ctx.moveTo(xl,yE);ctx.quadraticCurveTo(cx,yCtl,xr,yE);ctx.lineTo(xr,ybot);ctx.lineTo(xl,ybot);ctx.closePath();
+  }else{
+    ctx.fillStyle=g;ctx.globalAlpha=0.88;
+    ctx.moveTo(xl,y0);ctx.lineTo(xl,yE);ctx.quadraticCurveTo(cx,yCtl,xr,yE);ctx.lineTo(xr,y0);ctx.closePath();
+  }
+  ctx.fill();ctx.globalAlpha=1;
+  ctx.strokeStyle=L.stroke;ctx.lineWidth=2.5*d;ctx.beginPath();
+  ctx.moveTo(xl,yE);ctx.quadraticCurveTo(cx,yCtl,xr,yE);ctx.stroke();
+}
+function drawTube(ctx,xl,xr,ytop,ybot,d){
+  ctx.strokeStyle='#6b7785';ctx.lineWidth=4*d;ctx.beginPath();
+  ctx.moveTo(xl-2*d,ytop);ctx.lineTo(xl-2*d,ybot);ctx.moveTo(xr+2*d,ytop);ctx.lineTo(xr+2*d,ybot);ctx.stroke();
+}
+function drawBath(ctx,W,H,y0,L,d){
+  ctx.fillStyle=L.fill;ctx.globalAlpha=0.38;ctx.fillRect(0,y0,W,H-y0);ctx.globalAlpha=1;
+  ctx.strokeStyle=L.stroke;ctx.lineWidth=3*d;ctx.beginPath();ctx.moveTo(0,y0);ctx.lineTo(W,y0);ctx.stroke();
+}
+function capillaryColumn(ctx,W,H,d,opts){
+  var liq=opts.liq,th=opts.th,r=opts.r,cx=opts.cx,harr=opts.harr,idx=opts.idx;
+  var L=LIQ[liq],sc=opts.sc,y0=opts.y0,ytop=opts.ytop,ybot=opts.ybot,showLabel=opts.label;
+  var cth=Math.cos(th*Math.PI/180),ht=hT(r,th,liq);
+  harr[idx]+=(ht-harr[idx])*0.03;
+  var h=harr[idx],rp=r*sc,yc=y0-h*sc;
+  var R=rp/Math.max(0.05,Math.abs(cth));
+  var ds=Math.min(rp*1.4,R-Math.sqrt(Math.max(0,R*R-rp*rp)));
+  var sag=(cth>=0?1:-1)*ds,xl=cx-rp,xr=cx+rp;
+  yc=Math.max(ytop+36*d,Math.min(ybot-6*d,yc));
+  var yE=yc-sag,yCtl=2*yc-yE,up=cth>=0;
+  drawMeniscusFill(ctx,xl,xr,cx,y0,yE,yCtl,ybot,up,L,d);
+  drawTube(ctx,xl,xr,ytop,ybot,d);
+  if(showLabel){
+    ctx.fillStyle='#1c2430';ctx.font=(13*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+    ctx.fillText(showLabel,cx,ytop+16*d);
+  }
+  var Fw=2*Math.PI*(r/1000)*L.g*Math.abs(cth)*18000*d;
+  var Wg=Math.PI*(r/1000)*(r/1000)*L.rho*9.8*Math.abs(h)/1000*18000*d;
+  Fw=Math.min(Fw,H*0.28);Wg=Math.min(Wg,H*0.28);
+  var px=xr+18*d;
+  if(Fw>2*d){
+    arrow(ctx,px,yc,px,up?yc-Fw:yc+Fw,'#2e86c1',3.5*d,10*d);
+    if(Wg>2*d)arrow(ctx,px+12*d,yc,px+12*d,up?yc+Wg:yc-Wg,'#c92a2a',3.5*d,10*d);
+  }
+  return {up:up,h:h,ht:ht,L:L};
+}
+function scene3(ctx,W,H,d){
+  ctx.clearRect(0,0,W,H);
+  var sc=Math.min(W,H)*0.018,y0=H*0.58,ytop=H*0.07,ybot=H*0.95;
+  if(S.capMode==='compare'){
+    var mid=W*0.5;
+    ctx.save();ctx.beginPath();ctx.rect(0,0,mid-3,H);ctx.clip();
+    drawBath(ctx,W,H,y0,LIQ.water,d);
+    capillaryColumn(ctx,W,H,d,{liq:'water',th:10,r:0.5,cx:W*0.16,harr:hcurW,idx:0,sc:sc,y0:y0,ytop:ytop,ybot:ybot,label:'0.5 mm'});
+    capillaryColumn(ctx,W,H,d,{liq:'water',th:10,r:1.5,cx:W*0.36,harr:hcurW,idx:1,sc:sc,y0:y0,ytop:ytop,ybot:ybot,label:'1.5 mm'});
+    ctx.restore();
+    ctx.save();ctx.beginPath();ctx.rect(mid+3,0,W-mid,H);ctx.clip();
+    drawBath(ctx,W,H,y0,LIQ.mercury,d);
+    capillaryColumn(ctx,W,H,d,{liq:'mercury',th:140,r:0.5,cx:W*0.64,harr:hcurM,idx:0,sc:sc,y0:y0,ytop:ytop,ybot:ybot,label:'0.5 mm'});
+    capillaryColumn(ctx,W,H,d,{liq:'mercury',th:140,r:1.5,cx:W*0.84,harr:hcurM,idx:1,sc:sc,y0:y0,ytop:ytop,ybot:ybot,label:'1.5 mm'});
+    ctx.restore();
+    ctx.strokeStyle='#8a7a60';ctx.setLineDash([6*d,6*d]);ctx.lineWidth=2*d;
+    ctx.beginPath();ctx.moveTo(mid,ytop);ctx.lineTo(mid,ybot);ctx.stroke();ctx.setLineDash([]);
+    ctx.font=(15*d)+'px Tahoma,sans-serif';ctx.textAlign='center';ctx.fillStyle='#1c2430';
+    ctx.fillText('آب',W*0.26,H-10*d);ctx.fillText('جیوه',W*0.74,H-10*d);
+    var st=$('st3'),stb=$('st3b');
+    if(st){st.className='vis-state ok';st.textContent='آب بالا · مقعر';}
+    if(stb){stb.className='vis-state bad';stb.textContent='جیوه پایین · محدب';}
+    return;
+  }
+  var liq=S.liq,L=LIQ[liq],th=S.cth;
+  drawBath(ctx,W,H,y0,L,d);
+  var last=null;
+  for(var i=0;i<3;i++){
+    last=capillaryColumn(ctx,W,H,d,{
+      liq:liq,th:th,r:RADII[i],cx:W*(0.2+0.3*i),harr:liq==='water'?hcurW:hcurM,idx:i,
+      sc:sc,y0:y0,ytop:ytop,ybot:ybot,label:RADII[i]+' mm'
+    });
+  }
+  var st=$('st3');
+  if(st){st.className='vis-state '+(last.up?'ok':'bad');st.textContent=last.up?'بالا می‌رود':'پایین می‌رود';}
+}
+
+function scene4(){
+  for(var k=0;k<3;k++){
+    var c=$('m'+k);if(!c)continue;
+    var ctx=c.getContext('2d'),W=c.width,H=c.height,d=W/(c.getBoundingClientRect().width||1);
+    var A=Math.PI/2*Math.pow(H*0.24,2),th=TYP[k]*Math.PI/180;
+    drawCap(ctx,W,H,d,th,A,H*0.8,true,W/2);
+  }
+}
+
+function loop(){
+  $('cmp').style.display=tab===4?'grid':'none';
+  $('cv').style.display=tab===4?'none':'block';
+  if(tab!==4){
+    var c=$('cv'),r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;
+    c.width=Math.round(Math.max(1,r.width)*d);c.height=Math.round(Math.max(1,r.height)*d);
+    var ctx=c.getContext('2d');
+    if(tab===0)scene0(ctx,c.width,c.height,d);
+    if(tab===1)scene1(ctx,c.width,c.height,d);
+    if(tab===2)scene2(ctx,c.width,c.height,d);
+    if(tab===3)scene3(ctx,c.width,c.height,d);
+  }else{
+    fitAll();scene4();
+  }
+  requestAnimationFrame(loop);
+}
+
+document.querySelectorAll('#tabs button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('#tabs button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');tab=+b.getAttribute('data-t');panels();fitAll();
+  };
+});
+window.addEventListener('resize',fitAll);
+panels();fitAll();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

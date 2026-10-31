@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آزمایشگاه مجازی فیزیک</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/catalog.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="30" fill="#521764"/>
+      <circle cx="32" cy="32" r="22" fill="#f5d547"/>
+      <circle cx="24" cy="26" r="6" fill="#1565c0"/>
+      <circle cx="40" cy="26" r="6" fill="#e07a1f"/>
+      <circle cx="32" cy="42" r="6" fill="#58a73b"/>
+    </svg>
+    <span class="brand-text"><b>فیزیک‌لب</b><span>شبیه‌سازی تعاملی</span></span>
+  </a>
+  <nav class="nav">
+    <a class="is-on" href="index.html">شبیه‌سازی‌ها</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="browse">
+    <aside class="side">
+      <h3>موضوع</h3>
+      <div class="side-list" id="filters"></div>
+    </aside>
+    <section>
+      <h1 class="page-title" id="ptitle">همه شبیه‌سازی‌ها</h1>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="inner">
+    <div>آزمایشگاه مجازی فیزیک</div>
+    <div>تعامل تصویری، متن کم</div>
+  </div>
+  <div class="bar">بکشید · اسلایدر · مشاهده کنید</div>
+</footer>
+<script src="core/ns.js"></script>
+<script src="data/registry.js"></script>
+<script>
+(function (PL) {
+  var filtersEl = document.getElementById('filters');
+  var grid = document.getElementById('grid');
+  var ptitle = document.getElementById('ptitle');
+  var topics = PL.topics || [];
+  var registry = (PL.registry || []).slice().sort(function (a, b) { return a.order - b.order; });
+
+  function topicTitle(id) {
+    var i;
+    for (i = 0; i < topics.length; i++) if (topics[i].id === id) return topics[i].title;
+    return id;
+  }
+
+  function countFor(filter) {
+    if (filter === 'all') return registry.length;
+    var n = 0, i;
+    for (i = 0; i < registry.length; i++) {
+      if (registry[i].topics.indexOf(filter) !== -1) n++;
+    }
+    return n;
+  }
+
+  function sanitizeHash(raw) {
+    var h = String(raw || '').replace(/^#/, '');
+    if (!/^[a-z0-9-]+$/i.test(h)) return 'all';
+    if (h === 'all') return 'all';
+    var i;
+    for (i = 0; i < topics.length; i++) if (topics[i].id === h) return h;
+    return 'all';
+  }
+
+  function renderChips(filter) {
+    filtersEl.innerHTML = '';
+    var items = [{ id: 'all', title: 'همه' }].concat(topics);
+    var i;
+    for (i = 0; i < items.length; i++) {
+      (function (item) {
+        var b = document.createElement('button');
+        b.className = 'chip' + (item.id === filter ? ' on' : '');
+        b.setAttribute('data-f', item.id);
+        b.innerHTML = '<span class="dot"></span>' + item.title + ' <span class="count">' + countFor(item.id) + '</span>';
+        b.addEventListener('click', function () {
+          if (item.id === 'all') history.replaceState(null, '', location.pathname + location.search);
+          else location.hash = item.id;
+          apply(item.id);
+        });
+        filtersEl.appendChild(b);
+      })(items[i]);
+    }
+  }
+
+  function renderCards(filter) {
+    grid.innerHTML = '';
+    var i, j;
+    for (i = 0; i < registry.length; i++) {
+      var e = registry[i];
+      if (filter !== 'all' && e.topics.indexOf(filter) === -1) continue;
+      var a = document.createElement('a');
+      a.className = 'sim-card';
+      a.href = e.path;
+      a.setAttribute('data-cat', e.topics[0] || '');
+      var thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      thumb.innerHTML = e.thumbnail;
+      var h2 = document.createElement('h2');
+      h2.textContent = e.title;
+      var tags = document.createElement('div');
+      tags.className = 'tags';
+      for (j = 0; j < e.topics.length; j++) {
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = topicTitle(e.topics[j]);
+        tags.appendChild(tag);
+      }
+      a.appendChild(thumb);
+      a.appendChild(h2);
+      a.appendChild(tags);
+      grid.appendChild(a);
+    }
+  }
+
+  function apply(filter) {
+    var title = filter === 'all' ? 'همه شبیه‌سازی‌ها' : topicTitle(filter);
+    ptitle.textContent = title;
+    renderChips(filter);
+    renderCards(filter);
+  }
+
+  function fromHash() {
+    apply(sanitizeHash(location.hash));
+  }
+
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+})(window.PL);
+</script>
+</body>
+</html>

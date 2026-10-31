@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نقاط هم‌تراز</title>
+<link rel="stylesheet" href="../css/phet.css">
+<style>
+.formula{
+  direction:ltr;unicode-bidi:isolate;font-family:"Times New Roman",Times,serif;
+  font-weight:700;letter-spacing:.02em;
+}
+.eq-banner{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.92);border:2px solid #2b8a3e;border-radius:12px;
+  padding:8px 18px;z-index:3;white-space:nowrap;pointer-events:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+.eq-banner .formula{color:#2b8a3e;font-size:1.05rem}
+.gauge-card .formula{font-size:1rem}
+.liq-toggle button.on.oil{background:#f4d03f;color:#5c4a00;border-color:#b7950b}
+</style>
+</head>
+<body class="sim-app">
+<header class="sim-top">
+  <a href="../index.html">
+    <svg width="28" height="28" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#521764"/><circle cx="32" cy="32" r="22" fill="#f5d547"/></svg>
+    فیزیک‌لب
+  </a>
+  <h1>نقاط هم‌تراز</h1>
+  <span></span>
+</header>
+<div class="sim-body">
+  <div class="sim-stage lab">
+    <div class="eq-banner" id="banner"><span class="formula">P<sub>A</sub> = P<sub>B</sub> = P<sub>C</sub> = P<sub>0</sub> + ρgh</span></div>
+    <canvas id="cv" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  </div>
+  <aside class="sim-panel">
+    <div class="box">
+      <h3>عمق h</h3>
+      <input type="range" id="depth" min="6" max="78" value="42">
+      <div class="bar"><i id="db" style="background:#9b59b6;width:42%"></i></div>
+    </div>
+    <div class="box">
+      <h3>مایع</h3>
+      <div class="liq-toggle">
+        <button type="button" id="wtr" class="on water">آب</button>
+        <button type="button" id="oil" class="oil">روغن</button>
+        <button type="button" id="hg" class="hg">جیوه</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>نمایش</h3>
+      <label><input type="checkbox" id="showP" checked> فشارسنج</label>
+      <label><input type="checkbox" id="showH" checked> ستون h</label>
+      <label><input type="checkbox" id="showEq" checked> برابری</label>
+    </div>
+    <div class="gauges" id="gauges"></div>
+    <div class="vis-state ok"><span class="formula">P<sub>A</sub> = P<sub>B</sub> = P<sub>C</sub></span></div>
+    <div class="tools">
+      <button class="ico-btn reset" id="rst" title="بازنشانی">
+        <svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg>
+      </button>
+    </div>
+  </aside>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var S={depth:42,rho:1000,showP:true,showH:true,showEq:true,drag:false};
+var G=9.8, Patm=101325;
+var LIQ={
+  1000:{fill:'#3d9be8',deep:'#1b5f9a',shine:'#b9e4ff',name:'آب'},
+  800:{fill:'#e3b341',deep:'#9a6b10',shine:'#ffe9a8',name:'روغن'},
+  13600:{fill:'#9aa4ae',deep:'#3e464e',shine:'#eef2f6',name:'جیوه'}
+};
+function L(){return LIQ[S.rho]||LIQ[1000];}
+function fit(){
+  var c=$('cv'),r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  c.width=Math.round(Math.max(1,r.width)*d);
+  c.height=Math.round(Math.max(1,r.height)*d);
+  return d;
+}
+function pathA(ctx,x,ySurf,yBase,d){
+  var n=22*d, m=ySurf+(yBase-ySurf)*0.46, w=52*d;
+  ctx.beginPath();
+  ctx.moveTo(x-n,ySurf);ctx.lineTo(x+n,ySurf);
+  ctx.lineTo(x+n,m);ctx.lineTo(x+w,m+16*d);ctx.lineTo(x+w,yBase);
+  ctx.lineTo(x-w,yBase);ctx.lineTo(x-w,m+16*d);ctx.lineTo(x-n,m);ctx.closePath();
+}
+function pathB(ctx,x,ySurf,yBase,d){
+  var w=36*d;
+  ctx.beginPath();
+  ctx.moveTo(x-w,ySurf);ctx.lineTo(x+w,ySurf);ctx.lineTo(x+w,yBase);ctx.lineTo(x-w,yBase);ctx.closePath();
+}
+function pathC(ctx,x,ySurf,yBase,d){
+  var n=24*d, m=ySurf+(yBase-ySurf)*0.28, w=58*d, b=28*d;
+  ctx.beginPath();
+  ctx.moveTo(x-n,ySurf);ctx.lineTo(x+n,ySurf);
+  ctx.lineTo(x+n,m);ctx.lineTo(x+w,yBase-8*d);ctx.lineTo(x+b,yBase);
+  ctx.lineTo(x-b,yBase);ctx.lineTo(x-w,yBase-8*d);ctx.lineTo(x-n,m);ctx.closePath();
+}
+var PATHS={A:pathA,B:pathB,C:pathC};
+function glassStroke(ctx,d){
+  ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=7*d;ctx.stroke();
+  ctx.strokeStyle='#5d6b79';ctx.lineWidth=3.2*d;ctx.stroke();
+}
+function drawGauge(ctx,x,y,val,max,label,d){
+  var R=28*d;
+  ctx.save();
+  ctx.beginPath();ctx.arc(x,y,R+6*d,0,6.2832);
+  ctx.fillStyle='#f4f1ea';ctx.fill();
+  ctx.strokeStyle='#5a4630';ctx.lineWidth=3*d;ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y,R,0,6.2832);
+  ctx.fillStyle='#fffdf6';ctx.fill();
+  ctx.strokeStyle='#2c2418';ctx.lineWidth=2*d;ctx.stroke();
+  var start=-Math.PI*0.75, end=Math.PI*0.75, n=10,i;
+  for(i=0;i<=n;i++){
+    var a=start+(end-start)*i/n, inner=i%2===0?R-10*d:R-6*d;
+    ctx.beginPath();
+    ctx.moveTo(x+Math.cos(a)*inner,y+Math.sin(a)*inner);
+    ctx.lineTo(x+Math.cos(a)*(R-2*d),y+Math.sin(a)*(R-2*d));
+    ctx.strokeStyle='#2c2418';ctx.lineWidth=(i%2===0?2:1)*d;ctx.stroke();
+  }
+  var ang=start+(end-start)*Math.min(1,val/max);
+  ctx.strokeStyle='#c0392b';ctx.lineWidth=2.4*d;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(ang)*(R-8*d),y+Math.sin(ang)*(R-8*d));ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y,4*d,0,6.2832);ctx.fillStyle='#2c2418';ctx.fill();
+  ctx.fillStyle='#1c2430';ctx.font=(11*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+  ctx.fillText(label,x,y+R+14*d);
+  ctx.restore();
+}
+function draw(){
+  var c=$('cv'),ctx=c.getContext('2d'),W=c.width,H=c.height,d=window.devicePixelRatio||1;
+  var now=performance.now()/1000;
+  ctx.clearRect(0,0,W,H);
+  var sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#c9e7f8');sky.addColorStop(.55,'#eaf4c8');sky.addColorStop(1,'#c9b48a');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  var yBase=H*0.78, ySurf=H*0.18, yBot=H*0.92, yTable=H*0.94;
+  var lineY=ySurf+(yBase-ySurf)*(S.depth/100);
+  var xs=[W*0.23,W*0.5,W*0.77], kinds=['A','B','C'];
+  var C=L();
+  ctx.fillStyle='#8b5a2b';ctx.fillRect(0,yTable,W,H-yTable);
+  ctx.fillStyle='#6e4220';ctx.fillRect(0,yTable,W,8*d);
+  var k;
+  for(k=0;k<8;k++){
+    ctx.fillStyle=k%2?'rgba(255,255,255,.06)':'rgba(0,0,0,.08)';
+    ctx.fillRect(k*(W/8),yTable+8*d,W/8,H-yTable);
+  }
+  var tankX=W*0.07, tankW=W*0.86, tankH=yBot-yBase;
+  var lg=ctx.createLinearGradient(0,yBase,0,yBot);
+  lg.addColorStop(0,C.fill);lg.addColorStop(1,C.deep);
+  ctx.fillStyle=lg;ctx.fillRect(tankX,yBase,tankW,tankH);
+  ctx.strokeStyle='#5d6b79';ctx.lineWidth=4*d;
+  ctx.beginPath();ctx.moveTo(tankX,yBase);ctx.lineTo(tankX,yBot);ctx.lineTo(tankX+tankW,yBot);ctx.lineTo(tankX+tankW,yBase);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(tankX+6*d,yBase+4*d,10*d,tankH-8*d);
+  var i;
+  for(i=0;i<3;i++){
+    ctx.save();
+    PATHS[kinds[i]](ctx,xs[i],ySurf,yBase,d);
+    ctx.clip();
+    var vg=ctx.createLinearGradient(0,ySurf,0,yBase);
+    vg.addColorStop(0,C.shine);vg.addColorStop(.25,C.fill);vg.addColorStop(1,C.deep);
+    ctx.fillStyle=vg;ctx.fillRect(xs[i]-80*d,ySurf,160*d,yBase-ySurf);
+    ctx.globalAlpha=.35;ctx.fillStyle='#fff';ctx.fillRect(xs[i]-18*d,ySurf,8*d,yBase-ySurf);
+    ctx.globalAlpha=1;
+    var wave=Math.sin(now*2+i)*2*d;
+    ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2*d;
+    ctx.beginPath();ctx.moveTo(xs[i]-70*d,ySurf+wave);
+    ctx.quadraticCurveTo(xs[i],ySurf-4*d-wave,xs[i]+70*d,ySurf+wave);ctx.stroke();
+    ctx.restore();
+    PATHS[kinds[i]](ctx,xs[i],ySurf-2*d,yBase,d);
+    glassStroke(ctx,d);
+    ctx.strokeStyle='#5d6b79';ctx.lineWidth=4*d;
+    ctx.beginPath();
+    ctx.moveTo(xs[i]-22*d,ySurf-2*d);ctx.lineTo(xs[i]+22*d,ySurf-2*d);
+    if(kinds[i]==='B'){ctx.moveTo(xs[i]-36*d,ySurf-2*d);ctx.lineTo(xs[i]+36*d,ySurf-2*d);}
+    ctx.stroke();
+  }
+  ctx.setLineDash([10*d,7*d]);ctx.strokeStyle='#8e44ad';ctx.lineWidth=2.6*d;
+  ctx.beginPath();ctx.moveTo(W*0.08,lineY);ctx.lineTo(W*0.92,lineY);ctx.stroke();ctx.setLineDash([]);
+  var h_m=(lineY-ySurf)/(yBase-ySurf)*0.22;
+  var P=Patm+S.rho*G*h_m;
+  var Pk=P/1000;
+  var labels=['A','B','C'];
+  var maxP=Patm+13600*G*0.22;
+  if(S.showH){
+    ctx.strokeStyle='#1c2430';ctx.lineWidth=1.8*d;
+    ctx.beginPath();ctx.moveTo(W*0.085,ySurf);ctx.lineTo(W*0.085,lineY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W*0.07,ySurf);ctx.lineTo(W*0.1,ySurf);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W*0.07,lineY);ctx.lineTo(W*0.1,lineY);ctx.stroke();
+    ctx.fillStyle='#1c2430';ctx.font=(16*d)+'px "Times New Roman",serif';ctx.textAlign='center';
+    ctx.fillText('h',W*0.055,(ySurf+lineY)/2+6*d);
+    ctx.setLineDash([4*d,4*d]);ctx.strokeStyle='#2b8a3e';ctx.lineWidth=1.6*d;
+    ctx.beginPath();ctx.moveTo(W*0.1,ySurf);ctx.lineTo(W*0.9,ySurf);ctx.stroke();ctx.setLineDash([]);
+  }
+  for(i=0;i<3;i++){
+    ctx.beginPath();ctx.arc(xs[i],lineY,9*d,0,6.2832);
+    ctx.fillStyle='#c0392b';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2.4*d;ctx.stroke();
+    ctx.fillStyle='#1c2430';ctx.font=(20*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+    ctx.fillText(labels[i],xs[i],lineY-16*d);
+    if(S.showP){
+      var gy=Math.min(H*0.72, lineY+52*d);
+      ctx.strokeStyle='#5a4630';ctx.lineWidth=2*d;
+      ctx.beginPath();ctx.moveTo(xs[i],lineY+9*d);ctx.lineTo(xs[i],gy-34*d);ctx.stroke();
+      drawGauge(ctx,xs[i],gy,P,maxP,Pk.toFixed(1)+' kPa',d);
+    }
+  }
+  $('banner').style.display=S.showEq?'block':'none';
+  var html='';
+  for(i=0;i<3;i++){
+    html+='<div class="gauge gauge-card"><div class="row"><span class="formula">P<sub>'+labels[i]+'</sub></span><span>'+Pk.toFixed(1)+' kPa</span></div></div>';
+  }
+  html+='<div class="gauge"><div class="eq"><span class="formula">P = P<sub>0</sub> + ρgh</span></div></div>';
+  $('gauges').innerHTML=html;
+  $('db').style.width=S.depth+'%';
+}
+var c=$('cv');
+function yToDepth(clientY){
+  var r=c.getBoundingClientRect(),H=c.height,d=window.devicePixelRatio||1;
+  var y=(clientY-r.top)*d, ySurf=H*0.18, yBase=H*0.78;
+  var tt=(y-ySurf)/(yBase-ySurf);
+  return Math.max(6,Math.min(78,tt*100));
+}
+c.addEventListener('pointerdown',function(e){
+  S.drag=true;S.depth=yToDepth(e.clientY);$('depth').value=S.depth;c.setPointerCapture(e.pointerId);
+});
+c.addEventListener('pointermove',function(e){if(!S.drag)return;S.depth=yToDepth(e.clientY);$('depth').value=S.depth;});
+c.addEventListener('pointerup',function(){S.drag=false;});
+c.addEventListener('pointercancel',function(){S.drag=false;});
+function loop(){fit();draw();requestAnimationFrame(loop);}
+$('depth').oninput=function(){S.depth=+this.value;};
+function syncLiq(){
+  $('wtr').className=S.rho===1000?'on water':'';
+  $('oil').className=S.rho===800?'on oil':'oil';
+  $('hg').className=S.rho===13600?'on hg':'hg';
+}
+$('wtr').onclick=function(){S.rho=1000;syncLiq();};
+$('oil').onclick=function(){S.rho=800;syncLiq();};
+$('hg').onclick=function(){S.rho=13600;syncLiq();};
+$('showP').onchange=function(){S.showP=this.checked;};
+$('showH').onchange=function(){S.showH=this.checked;};
+$('showEq').onchange=function(){S.showEq=this.checked;$('banner').style.display=S.showEq?'block':'none';};
+$('rst').onclick=function(){S.depth=42;S.rho=1000;$('depth').value=42;syncLiq();};
+window.addEventListener('resize',fit);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+:root{
+  --purple:#521764;
+  --lilac:#967ba8;
+  --yellow:#f5d547;
+  --yellow-d:#e6c22a;
+  --green:#58a73b;
+  --orange:#e07a1f;
+  --blue:#2e86c1;
+  --sky:#b8e0f5;
+  --lab:#eef6fb;
+  --fg:#1c2430;
+  --mut:#5d6b79;
+  --line:#d2d2d2;
+  --card:#fff;
+  --cry:#1565c0;
+  --amo:#e07a1f;
+  --liq:#4a90e2;
+  --srf:#f08c00;
+  --arw:#c92a2a;
+  --wall:#8a949f;
+  --ok:#2b8a3e;
+  --bad:#c92a2a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;color:var(--fg);font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif}
+a{color:inherit}
+button,input,select{font:inherit}
+button{cursor:pointer}
+img{display:block;max-width:100%}
+.formula{
+  direction:ltr;unicode-bidi:isolate;font-family:"Times New Roman",Times,serif;
+  font-weight:700;letter-spacing:.02em;
+}
+.ltr{direction:ltr;unicode-bidi:isolate}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}

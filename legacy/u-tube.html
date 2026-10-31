@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوله U شکل</title>
+<link rel="stylesheet" href="../css/phet.css">
+<style>
+.sim-app.fit{height:100dvh;max-height:100dvh;overflow:hidden}
+.sim-app.fit .sim-top{height:44px}
+.sim-app.fit .sim-panel{width:min(292px,30vw);padding:8px;gap:7px;overflow:hidden}
+.sim-app.fit .box{padding:8px 10px}
+.sim-app.fit .box h3{margin:0 0 6px;font-size:.8rem}
+.row{display:flex;gap:4px}
+.row button{flex:1;padding:6px 4px;font-size:.75rem}
+.row button.on{background:#521764;color:#fff;border-color:#3a0f48}
+.phases{display:flex;gap:3px}
+.phases button{flex:1;padding:6px 2px;font-size:.68rem;line-height:1.2}
+.phases button.on{background:#521764;color:#fff;border-color:#3a0f48}
+.eqbox{background:#fff;border:2px solid #2b8a3e;border-radius:8px;padding:7px;font-size:.78rem;min-height:4.2em}
+.eqbox .formula{display:block;text-align:center;margin:3px 0;font-size:.88rem;color:#2b8a3e}
+.hint{font-size:.78rem;line-height:1.4;margin:0;color:#1c2430}
+.why{font-size:.74rem;line-height:1.35;margin:5px 0 0}
+.why.bad{color:#c92a2a}
+.why.ok{color:#2b8a3e}
+.leg{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;margin-top:6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-inline-end:3px;vertical-align:-1px;border:1px solid rgba(0,0,0,.25)}
+.readout{
+  position:absolute;top:10px;inset-inline-start:10px;z-index:3;
+  background:rgba(255,255,255,.92);border:2px solid #c9a60e;border-radius:10px;
+  padding:6px 10px;font-size:.78rem;font-weight:800;pointer-events:none;
+}
+.probe{direction:ltr;unicode-bidi:isolate}
+@media(max-width:860px){
+  .sim-app.fit .sim-panel{width:100%;max-height:38dvh;overflow:auto}
+}
+</style>
+</head>
+<body class="sim-app fit">
+<header class="sim-top">
+  <a href="../index.html">
+    <svg width="28" height="28" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#521764"/><circle cx="32" cy="32" r="22" fill="#f5d547"/></svg>
+    فیزیک‌لب
+  </a>
+  <h1>لوله U شکل</h1>
+  <span></span>
+</header>
+<div class="sim-body">
+  <div class="sim-stage lab">
+    <div class="readout" id="readout"><span class="probe" id="probe">cm</span></div>
+    <canvas id="cv" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  </div>
+  <aside class="sim-panel">
+    <div class="box">
+      <h3>آرایش مایع</h3>
+      <div class="row" id="cases"></div>
+      <div class="leg" id="leg"></div>
+    </div>
+    <div class="box">
+      <h3>کار آزمایش</h3>
+      <div class="phases" id="phases"></div>
+      <p class="hint" id="hint"></p>
+    </div>
+    <div class="box">
+      <h3>نقاط هم‌فشار</h3>
+      <button type="button" id="cmp">مقایسه کن</button>
+      <p class="why" id="why"></p>
+    </div>
+    <div class="box">
+      <h3>معادله</h3>
+      <div class="eqbox" id="eqbox"></div>
+    </div>
+    <div class="box" id="calcBox">
+      <h3>پیش‌بینی ارتفاع مجهول</h3>
+      <div class="num-row">
+        <input type="number" id="guess" min="0" max="40" step="0.1" placeholder="cm">
+        <span>cm</span>
+        <button type="button" id="check">بررسی</button>
+      </div>
+      <p class="why" id="chk"></p>
+    </div>
+    <div class="box">
+      <div class="row">
+        <button type="button" class="on" id="g98">g = ۹٫۸</button>
+        <button type="button" id="g10">g = ۱۰</button>
+      </div>
+    </div>
+    <div class="vis-state ok" id="ust">کاوش</div>
+    <div class="tools">
+      <button class="ico-btn reset" id="rst" title="بازنشانی">
+        <svg viewBox="0 0 24 24"><path d="M12 6V2L7 7l5 5V8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"/></svg>
+      </button>
+    </div>
+  </aside>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var PATM=101325;
+var LIQ={
+  w:{name:'آب',rho:1000,fill:'#3d9be8',deep:'#155a96',shine:'#c5e8ff'},
+  o:{name:'روغن',rho:920,fill:'#e8c44a',deep:'#8a6d10',shine:'#fff3b0'},
+  gy:{name:'گلیسیرین',rho:1260,fill:'#7fbf7a',deep:'#3d6a32',shine:'#d7f0c8'}
+};
+var PHASE=[
+  {t:'کاوش', h:'لوله را ببین. هر سطح آزاد با جو در تماس است.'},
+  {t:'اندازه', h:'خط بنفش را بکش. خط‌کش را روی ستون‌ها بکش تا ارتفاع بخوانی.'},
+  {t:'نقاط', h:'روی هر بازو کلیک کن تا نقطه بگذاری. بعد «مقایسه کن».'},
+  {t:'معادله', h:'فشار هر نقطه برابر است با فشار جوّی به‌اضافهٔ Σρgh لایه‌های بالای آن.'},
+  {t:'محاسبه', h:'ارتفاع مجهول را از معادله حساب کن و وارد کن.'}
+];
+function fa(n,d){
+  var s=(+n).toFixed(d==null?1:d);
+  return s.replace(/[0-9.]/g,function(ch){return ch==='.'?'٫':'۰۱۲۳۴۵۶۷۸۹'[ch];});
+}
+function sumH(a){var s=0,i;for(i=0;i<a.length;i++)s+=a[i].h;return s;}
+
+function buildOne(){
+  return {L:[{id:'w',h:18}], R:[{id:'w',h:18}], unk:{arm:'R',i:0,name:'ارتفاع راست'}};
+}
+function buildTwo(){
+  var Vo=10, Vw=24, dh=LIQ.o.rho*Vo/LIQ.w.rho, a=(Vw-dh)/2;
+  return {L:[{id:'w',h:a},{id:'o',h:Vo}], R:[{id:'w',h:Vw-a}], unk:{arm:'L',i:1,name:'ارتفاع روغن'}};
+}
+function buildThree(){
+  var Vo=8, Vw=10, Vg=20;
+  var diff=(LIQ.w.rho*Vw-LIQ.o.rho*Vo)/LIQ.gy.rho;
+  return {L:[{id:'gy',h:(Vg+diff)/2},{id:'o',h:Vo}], R:[{id:'gy',h:(Vg-diff)/2},{id:'w',h:Vw}], unk:{arm:'L',i:1,name:'ارتفاع روغن'}};
+}
+var CASES=[
+  {id:'one', name:'یک مایع', make:buildOne},
+  {id:'two', name:'دو مایع', make:buildTwo},
+  {id:'three', name:'سه لایه', make:buildThree}
+];
+
+var S={
+  ci:1, G:9.8, phase:0,
+  L:[], R:[], unk:null,
+  ref:null, pL:false, pR:false,
+  valid:null, reason:'',
+  guess:null, revealed:false, compared:false,
+  hoverH:null,
+  meas:null, drag:null, geo:null
+};
+
+function loadCase(){
+  var c=CASES[S.ci].make();
+  S.L=c.L;S.R=c.R;S.unk=c.unk;
+  S.ref=null;S.pL=false;S.pR=false;S.valid=null;S.reason='';
+  S.guess=null;S.revealed=false;S.compared=false;S.phase=0;S.meas=null;S.drag=null;
+  $('guess').value='';$('chk').textContent='';
+  ui();
+}
+function fluidAt(arm,y){
+  if(y<-0.05) return 'none';
+  var pos=0,i;
+  for(i=0;i<arm.length;i++){
+    if(y<=pos+arm[i].h+1e-6) return arm[i].id;
+    pos+=arm[i].h;
+  }
+  return 'air';
+}
+function connectingId(){
+  return (S.L[0] && S.R[0] && S.L[0].id===S.R[0].id) ? S.L[0].id : null;
+}
+function snaps(){
+  var out=[0], pos=0,i;
+  for(i=0;i<S.L.length;i++){pos+=S.L[i].h;out.push(pos);}
+  pos=0;
+  for(i=0;i<S.R.length;i++){pos+=S.R[i].h;out.push(pos);}
+  return out;
+}
+function snapY(y){
+  var list=snaps(), i, best=y, d=0.55;
+  for(i=0;i<list.length;i++) if(Math.abs(list[i]-y)<d){d=Math.abs(list[i]-y);best=list[i];}
+  return Math.max(0, Math.min(36, best));
+}
+function layersAbove(arm,y){
+  var out=[], pos=sumH(arm), i, bot, take;
+  for(i=arm.length-1;i>=0;i--){
+    bot=pos-arm[i].h;
+    if(y>=pos-1e-9){pos=bot;continue;}
+    take=pos-Math.max(y,bot);
+    if(take>0.02) out.push({id:arm[i].id,h:take});
+    pos=bot;
+    if(y>=bot-1e-9) break;
+  }
+  return out.reverse();
+}
+function pressAt(arm,y){
+  var p=PATM, i, L=layersAbove(arm,y);
+  for(i=0;i<L.length;i++) p+=LIQ[L[i].id].rho*S.G*(L[i].h/100);
+  return p;
+}
+function judge(){
+  if(S.ref==null){S.valid=null;S.reason='خط مرجع را روی لوله بگذار.';return;}
+  if(!S.pL || !S.pR){S.valid=null;S.reason='هر دو نقطه را انتخاب کن.';return;}
+  var y=S.ref, fL=fluidAt(S.L,y), fR=fluidAt(S.R,y), conn=connectingId();
+  if(fL==='air' && fR==='air'){
+    S.valid=false;S.reason='هر دو نقطه در هواست. ستونی برای مقایسه نیست.';return;
+  }
+  if(fL==='air' || fR==='air'){
+    S.valid=false;S.reason='یکی در هواست و یکی در مایع. این دو هم‌فشار نیستند.';return;
+  }
+  if(fL!==fR){
+    S.valid=false;S.reason='مایع دو نقطه یکی نیست. هم‌ارتفاع بودن کافی نیست.';return;
+  }
+  if(!conn || fL!==conn){
+    S.valid=false;S.reason='این مایع دو بازو را وصل نمی‌کند. فقط مایع پیوسته هم‌فشار است.';return;
+  }
+  S.valid=true;
+  S.reason='معتبر: هر دو نقطه در «'+LIQ[conn].name+'» پیوسته‌اند و هم‌ارتفاع‌اند.';
+}
+function unkH(){return (S.unk.arm==='L'?S.L:S.R)[S.unk.i].h;}
+function formulaOf(layers){
+  if(!layers.length) return 'P<sub>atm</sub>';
+  var s='P<sub>atm</sub>', i;
+  for(i=0;i<layers.length;i++) s+=' + ρ<sub>'+LIQ[layers[i].id].name+'</sub>gh<sub>'+(i+1)+'</sub>';
+  return s;
+}
+function formulaNum(layers, hideUnk){
+  if(!layers.length) return 'P<sub>atm</sub>';
+  var s='P<sub>atm</sub>', i, h;
+  for(i=0;i<layers.length;i++){
+    h=layers[i].h;
+    if(hideUnk && !S.revealed && S.unk && layers[i].id===(S.unk.arm==='L'?S.L:S.R)[S.unk.i].id && Math.abs(h-unkH())<0.05)
+      s+=' + ρ<sub>'+LIQ[layers[i].id].name+'</sub> g (؟)';
+    else s+=' + ρ<sub>'+LIQ[layers[i].id].name+'</sub> g ('+h.toFixed(1)+')';
+  }
+  return s;
+}
+
+function ui(){
+  var h='',i;
+  for(i=0;i<CASES.length;i++) h+='<button type="button" class="'+(S.ci===i?'on':'')+'" data-i="'+i+'">'+CASES[i].name+'</button>';
+  $('cases').innerHTML=h;
+  [].forEach.call(document.querySelectorAll('#cases button'),function(b){
+    b.onclick=function(){S.ci=+b.getAttribute('data-i');loadCase();};
+  });
+  var used={}, ids=[], k;
+  function add(a){for(k=0;k<a.length;k++) if(!used[a[k].id]){used[a[k].id]=1;ids.push(a[k].id);}}
+  add(S.L);add(S.R);
+  $('leg').innerHTML=ids.map(function(id){
+    return '<span><i style="background:'+LIQ[id].fill+'"></i>'+LIQ[id].name+' '+LIQ[id].rho+' kg/m³</span>';
+  }).join('');
+  h='';
+  for(i=0;i<PHASE.length;i++) h+='<button type="button" class="'+(S.phase===i?'on':'')+'" data-i="'+i+'">'+PHASE[i].t+'</button>';
+  $('phases').innerHTML=h;
+  [].forEach.call(document.querySelectorAll('#phases button'),function(b){
+    b.onclick=function(){S.phase=+b.getAttribute('data-i');ui();};
+  });
+  $('hint').textContent=PHASE[S.phase].h;
+  $('calcBox').style.display=S.phase>=4?'block':'none';
+  $('ust').className='vis-state '+(S.valid===false?'bad':'ok');
+  $('ust').textContent=S.valid===true?'نقاط معتبر':(S.valid===false?'نامعتبر':PHASE[S.phase].t);
+  var box=$('eqbox'), why=$('why');
+  if(!S.compared){
+    box.innerHTML='<span class="formula">P = P<sub>atm</sub> + Σ ρ g h</span>';
+    why.className='why';why.textContent=S.reason||'نقاط را بگذار و مقایسه کن.';
+    return;
+  }
+  judge();
+  var aL=layersAbove(S.L,S.ref), aR=layersAbove(S.R,S.ref);
+  var html='<div>چپ: <span class="formula">'+formulaNum(aL,S.unk.arm==='L')+'</span></div>';
+  html+='<div>راست: <span class="formula">'+formulaNum(aR,S.unk.arm==='R')+'</span></div>';
+  if(S.valid){
+    html+='<span class="formula">P<sub>L</sub> = P<sub>R</sub></span>';
+    html+='<span class="formula">'+formulaOf(aL).replace('P<sub>atm</sub> + ','')+' = '+formulaOf(aR).replace('P<sub>atm</sub> + ','')+'</span>';
+  }
+  box.innerHTML=html;
+  why.className='why '+(S.valid?'ok':'bad');
+  why.textContent=S.reason;
+}
+
+function geometry(W,H,d){
+  var bore=Math.max(16*d, Math.min(22*d, W*0.028));
+  var gap=Math.min(W*0.28, 168*d);
+  var HMAX=36;
+  var armH=Math.min(H*0.70, 360*d);
+  var yJoin=H*0.10+armH;
+  var yOpen=yJoin-armH;
+  return {
+    w:bore, HMAX:HMAX, armH:armH, yOpen:yOpen, yJoin:yJoin,
+    xl:W*0.48-gap/2, xr:W*0.48+gap/2, cx:W*0.48,
+    Rout:gap/2+bore, Rin:Math.max(bore*0.4, gap/2-bore),
+    px:armH/HMAX
+  };
+}
+function yPix(g,h){return g.yJoin-h*g.px;}
+function hFromY(g,py){return (g.yJoin-py)/g.px;}
+function tubeClip(ctx,g){
+  ctx.beginPath();
+  ctx.moveTo(g.xl-g.w,g.yOpen);
+  ctx.lineTo(g.xl-g.w,g.yJoin);
+  ctx.arc(g.cx,g.yJoin,g.Rout,Math.PI,0,true);
+  ctx.lineTo(g.xr+g.w,g.yOpen);
+  ctx.lineTo(g.xr-g.w,g.yOpen);
+  ctx.lineTo(g.xr-g.w,g.yJoin);
+  ctx.arc(g.cx,g.yJoin,g.Rin,0,Math.PI,false);
+  ctx.lineTo(g.xl+g.w,g.yOpen);
+  ctx.closePath();
+}
+function layerFill(ctx,x,w,yBot,yTop,F,d){
+  if(yBot-yTop<0.4) return;
+  var gr=ctx.createLinearGradient(x-w,0,x+w,0);
+  gr.addColorStop(0,F.deep);gr.addColorStop(.28,F.shine);gr.addColorStop(1,F.fill);
+  ctx.fillStyle=gr;ctx.fillRect(x-w,yTop,2*w,yBot-yTop);
+  ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(x-w+3*d,yTop,5*d,yBot-yTop);
+}
+function drawArm(ctx,x,g,arm,d,hideI){
+  var y=g.yJoin, i, y2;
+  for(i=0;i<arm.length;i++){
+    y2=y-arm[i].h*g.px;
+    layerFill(ctx,x,g.w,y,y2,LIQ[arm[i].id],d);
+    ctx.strokeStyle='rgba(28,36,48,.35)';ctx.lineWidth=1*d;
+    ctx.beginPath();ctx.moveTo(x-g.w,y2);ctx.lineTo(x+g.w,y2);ctx.stroke();
+    var hide=hideI===i && !S.revealed;
+    ctx.font=(11*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+    if(hide){
+      ctx.fillStyle='#c0392b';ctx.fillText('؟', x, (y+y2)/2+4*d);
+    } else if(S.phase>=1){
+      ctx.fillStyle='#1c2430';ctx.fillText(arm[i].h.toFixed(1), x, (y+y2)/2+4*d);
+    }
+    y=y2;
+  }
+  ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2*d;
+  ctx.beginPath();ctx.moveTo(x-g.w,y);ctx.quadraticCurveTo(x,y-3.5*d,x+g.w,y);ctx.stroke();
+  return y;
+}
+function atm(ctx,x,y,d){
+  ctx.strokeStyle='#2b8a3e';ctx.fillStyle='#2b8a3e';ctx.lineWidth=2.2*d;ctx.lineCap='round';
+  var i;
+  for(i=-1;i<=1;i++){
+    ctx.beginPath();ctx.moveTo(x+i*7*d,y-22*d);ctx.lineTo(x+i*7*d,y-3*d);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+i*7*d,y);ctx.lineTo(x+i*7*d-5*d,y-9*d);ctx.lineTo(x+i*7*d+5*d,y-9*d);ctx.closePath();ctx.fill();
+  }
+  ctx.font=(11*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+  ctx.fillText('فشار جوّی', x, y-28*d);
+}
+function ruler(ctx,g,d){
+  var x=g.xl-g.w-22*d, cm, yy;
+  ctx.strokeStyle='#1c2430';ctx.lineWidth=1.4*d;
+  ctx.beginPath();ctx.moveTo(x,g.yOpen);ctx.lineTo(x,g.yJoin);ctx.stroke();
+  ctx.font=(10*d)+'px Tahoma,sans-serif';ctx.textAlign='right';
+  for(cm=0;cm<=g.HMAX;cm+=2){
+    yy=yPix(g,cm);
+    var long=cm%4===0;
+    ctx.beginPath();ctx.moveTo(x-(long?8:4)*d,yy);ctx.lineTo(x,yy);ctx.stroke();
+    if(long){ctx.fillStyle='#1c2430';ctx.fillText(String(cm), x-10*d, yy+3*d);}
+  }
+  ctx.fillText('cm', x, g.yOpen-8*d);
+}
+function caliper(ctx,g,d){
+  if(!S.meas) return;
+  var y1=yPix(g,S.meas.a), y2=yPix(g,S.meas.b), x=g.xr+g.w+28*d;
+  var dh=Math.abs(S.meas.b-S.meas.a);
+  ctx.strokeStyle='#c0392b';ctx.fillStyle='#c0392b';ctx.lineWidth=1.8*d;
+  ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(g.xr+g.w+4*d,y1);ctx.lineTo(x+6*d,y1);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(g.xr+g.w+4*d,y2);ctx.lineTo(x+6*d,y2);ctx.stroke();
+  ctx.font=(12*d)+'px Tahoma,sans-serif';ctx.textAlign='left';
+  ctx.fillText(dh.toFixed(1)+' cm', x+10*d, (y1+y2)/2+4*d);
+}
+function point(ctx,x,y,lab,on,ok,d){
+  ctx.beginPath();ctx.arc(x,y,8*d,0,6.2832);
+  ctx.fillStyle=!on?'#95a5a6':(ok===false?'#c0392b':'#8e44ad');
+  ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.2*d;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font=(11*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+  ctx.fillText(lab, x, y+4*d);
+}
+
+function draw(){
+  var c=$('cv'),ctx=c.getContext('2d'),W=c.width,H=c.height,d=window.devicePixelRatio||1;
+  ctx.clearRect(0,0,W,H);
+  var sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#cfeaf8');sky.addColorStop(.55,'#e8f3c4');sky.addColorStop(1,'#d2c09a');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  var yTable=H*0.93;
+  ctx.fillStyle='#8b5a2b';ctx.fillRect(0,yTable,W,H-yTable);
+  ctx.fillStyle='#6e4220';ctx.fillRect(0,yTable,W,7*d);
+  var g=geometry(W,H,d);S.geo=g;
+  var conn=connectingId(), Fb=conn?LIQ[conn]:LIQ.w;
+  ctx.save();tubeClip(ctx,g);ctx.clip();
+  var bg=ctx.createLinearGradient(g.xl,g.yJoin,g.xr,g.yJoin+g.Rout);
+  bg.addColorStop(0,Fb.fill);bg.addColorStop(1,Fb.deep);
+  ctx.fillStyle=bg;ctx.fillRect(g.xl-g.w-6,g.yJoin-2,g.xr-g.xl+2*g.w+12,g.Rout+10);
+  var yLs=drawArm(ctx,g.xl,g,S.L,d,S.unk.arm==='L'?S.unk.i:-1);
+  var yRs=drawArm(ctx,g.xr,g,S.R,d,S.unk.arm==='R'?S.unk.i:-1);
+  ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(g.xl-g.w,g.yOpen);ctx.lineTo(g.xl-g.w,g.yJoin);
+  ctx.arc(g.cx,g.yJoin,g.Rout,Math.PI,0,true);ctx.lineTo(g.xr+g.w,g.yOpen);
+  ctx.moveTo(g.xr-g.w,g.yOpen);ctx.lineTo(g.xr-g.w,g.yJoin);
+  ctx.arc(g.cx,g.yJoin,g.Rin,0,Math.PI,false);ctx.lineTo(g.xl+g.w,g.yOpen);
+  ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=8*d;ctx.stroke();
+  ctx.strokeStyle='#5d6b79';ctx.lineWidth=3*d;ctx.stroke();
+  ctx.strokeStyle='#5d6b79';ctx.lineWidth=3.4*d;
+  ctx.beginPath();ctx.moveTo(g.xl-g.w-2*d,g.yOpen);ctx.lineTo(g.xl+g.w+2*d,g.yOpen);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(g.xr-g.w-2*d,g.yOpen);ctx.lineTo(g.xr+g.w+2*d,g.yOpen);ctx.stroke();
+  ctx.fillStyle='#1c2430';ctx.font=(14*d)+'px Tahoma,sans-serif';ctx.textAlign='center';
+  ctx.fillText('چپ',g.xl,g.yOpen-10*d);ctx.fillText('راست',g.xr,g.yOpen-10*d);
+  atm(ctx,g.xl,yLs-4*d,d);atm(ctx,g.xr,yRs-4*d,d);
+  ruler(ctx,g,d);
+  if(S.ref!=null){
+    var yr=yPix(g,S.ref);
+    ctx.setLineDash([9*d,6*d]);
+    ctx.strokeStyle=S.valid===false?'#c0392b':(S.valid?'#8e44ad':'#e67e22');
+    ctx.lineWidth=2.4*d;
+    ctx.beginPath();ctx.moveTo(g.xl-g.w-48*d,yr);ctx.lineTo(g.xr+g.w+48*d,yr);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=ctx.strokeStyle;ctx.font=(12*d)+'px Tahoma,sans-serif';
+    ctx.fillText('تراز مرجع', g.cx, yr-8*d);
+    if(S.phase>=2){
+      point(ctx,g.xl,yr,'آ',S.pL,S.valid,d);
+      point(ctx,g.xr,yr,'ب',S.pR,S.valid,d);
+    }
+  }
+  caliper(ctx,g,d);
+  if(S.hoverH!=null){
+    var yh=yPix(g,S.hoverH);
+    ctx.setLineDash([3*d,3*d]);ctx.strokeStyle='rgba(28,36,48,.35)';ctx.lineWidth=1*d;
+    ctx.beginPath();ctx.moveTo(g.xl-g.w-40*d,yh);ctx.lineTo(g.xr+g.w+40*d,yh);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  var txt='ارتفاع: —';
+  if(S.hoverH!=null) txt='ارتفاع: '+fa(S.hoverH)+' cm';
+  if(S.meas) txt+='   اندازه: '+fa(Math.abs(S.meas.b-S.meas.a))+' cm';
+  $('probe').textContent=txt;
+}
+
+function fit(){
+  var c=$('cv'), r=c.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  var w=Math.round(Math.max(1,r.width)*d), h=Math.round(Math.max(1,r.height)*d);
+  if(c.width!==w || c.height!==h){c.width=w;c.height=h;}
+}
+function loop(){fit();draw();requestAnimationFrame(loop);}
+
+function local(e){
+  var r=$('cv').getBoundingClientRect(), d=window.devicePixelRatio||1;
+  return {x:(e.clientX-r.left)*d, y:(e.clientY-r.top)*d};
+}
+function nearArm(g,x,side){
+  var ax=side==='L'?g.xl:g.xr;
+  return Math.abs(x-ax)<g.w+18*(window.devicePixelRatio||1);
+}
+var cv=$('cv');
+cv.addEventListener('pointerdown',function(e){
+  if(!S.geo) return;
+  var p=local(e), g=S.geo, h=snapY(hFromY(g,p.y));
+  cv.setPointerCapture(e.pointerId);
+  if(S.phase>=1 && p.x>g.xr+g.w+8){
+    S.drag='meas';S.meas={a:h,b:h};return;
+  }
+  if(S.phase>=1 && S.ref!=null && Math.abs(p.y-yPix(g,S.ref))<10*(window.devicePixelRatio||1)){
+    S.drag='ref';return;
+  }
+  S.ref=h;S.compared=false;S.valid=null;S.reason='';
+  if(S.phase<1) S.phase=1;
+  if(S.phase>=2){
+    if(nearArm(g,p.x,'L')) S.pL=true;
+    else if(nearArm(g,p.x,'R')) S.pR=true;
+    else {S.pL=false;S.pR=false;}
+  }
+  S.drag='ref';
+  ui();
+});
+cv.addEventListener('pointermove',function(e){
+  if(!S.geo) return;
+  var p=local(e), g=S.geo, h=hFromY(g,p.y);
+  S.hoverH=Math.max(0, Math.min(g.HMAX, h));
+  if(!S.drag) return;
+  var sh=snapY(S.hoverH);
+  if(S.drag==='ref'){S.ref=sh;S.compared=false;S.valid=null;}
+  if(S.drag==='meas' && S.meas) S.meas.b=sh;
+});
+cv.addEventListener('pointerup',function(){S.drag=null;ui();});
+cv.addEventListener('pointercancel',function(){S.drag=null;});
+
+$('cmp').onclick=function(){
+  if(S.phase<2) S.phase=2;
+  S.pL=true;S.pR=true;S.compared=true;
+  if(S.ref==null){S.reason='اول تراز مرجع را بگذار.';ui();return;}
+  judge();
+  if(S.valid && S.phase<3) S.phase=3;
+  ui();
+};
+$('check').onclick=function(){
+  var g=+ $('guess').value, ans=unkH();
+  if(!(g>=0)){$('chk').className='why bad';$('chk').textContent='یک عدد وارد کن.';return;}
+  var err=Math.abs(g-ans);
+  S.guess=g;S.revealed=true;S.phase=4;
+  $('chk').className='why '+(err<=0.2?'ok':'bad');
+  $('chk').textContent='پاسخ تو '+fa(g)+' cm — مدل '+fa(ans)+' cm — اختلاف '+fa(err)+(err<=0.2?' — تأیید':' — از معادله دوباره حساب کن');
+  ui();
+};
+$('g98').onclick=function(){S.G=9.8;$('g98').classList.add('on');$('g10').classList.remove('on');ui();};
+$('g10').onclick=function(){S.G=10;$('g10').classList.add('on');$('g98').classList.remove('on');ui();};
+$('rst').onclick=loadCase;
+
+loadCase();
+window.addEventListener('resize',fit);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

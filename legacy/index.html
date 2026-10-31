@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آزمایشگاه مجازی فیزیک</title>
+<link rel="stylesheet" href="css/phet.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="30" fill="#521764"/>
+      <circle cx="32" cy="32" r="22" fill="#f5d547"/>
+      <circle cx="24" cy="26" r="6" fill="#1565c0"/>
+      <circle cx="40" cy="26" r="6" fill="#e07a1f"/>
+      <circle cx="32" cy="42" r="6" fill="#58a73b"/>
+    </svg>
+    <span class="brand-text"><b>فیزیک‌لب</b><span>شبیه‌سازی تعاملی</span></span>
+  </a>
+  <nav class="nav">
+    <a class="is-on" href="index.html">شبیه‌سازی‌ها</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="browse">
+    <aside class="side">
+      <h3>موضوع</h3>
+      <div class="side-list" id="filters">
+        <button class="chip on" data-f="all"><span class="dot"></span>همه <span class="count">5</span></button>
+        <button class="chip" data-f="molecular"><span class="dot"></span>نیروی مولکولی <span class="count">3</span></button>
+        <button class="chip" data-f="pressure"><span class="dot"></span>فشار <span class="count">2</span></button>
+      </div>
+    </aside>
+
+    <section>
+      <h1 class="page-title" id="ptitle">همه شبیه‌سازی‌ها</h1>
+      <div class="grid">
+        <a class="sim-card" href="sims/crystalline.html" data-cat="molecular">
+          <div class="thumb">
+            <svg viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#cfe9f8"/>
+              <rect y="120" width="320" height="80" fill="#d9ec9a"/>
+              <g stroke="#1565c0" stroke-width="1.6" fill="none" opacity=".45">
+                <line x1="70" y1="70" x2="94" y2="70"/><line x1="94" y1="70" x2="118" y2="70"/>
+                <line x1="82" y1="90" x2="106" y2="90"/><line x1="70" y1="70" x2="82" y2="90"/>
+                <line x1="94" y1="70" x2="82" y2="90"/><line x1="94" y1="70" x2="106" y2="90"/>
+              </g>
+              <g fill="#1565c0">
+                <circle cx="70" cy="70" r="9"/><circle cx="94" cy="70" r="9"/><circle cx="118" cy="70" r="9"/>
+                <circle cx="82" cy="90" r="9"/><circle cx="106" cy="90" r="9"/><circle cx="130" cy="90" r="9"/>
+                <circle cx="70" cy="110" r="9"/><circle cx="94" cy="110" r="9"/><circle cx="118" cy="110" r="9"/>
+              </g>
+              <g fill="#e07a1f">
+                <circle cx="210" cy="68" r="9"/><circle cx="236" cy="62" r="9"/><circle cx="258" cy="78" r="9"/>
+                <circle cx="204" cy="92" r="9"/><circle cx="228" cy="98" r="9"/><circle cx="252" cy="104" r="9"/>
+                <circle cx="218" cy="118" r="9"/><circle cx="246" cy="122" r="9"/>
+              </g>
+            </svg>
+          </div>
+          <h2>جامد بلورین و بی‌شکل</h2>
+          <div class="tags"><span class="tag">نیروی مولکولی</span></div>
+        </a>
+
+        <a class="sim-card" href="sims/crystalline-3d.html" data-cat="molecular">
+          <div class="thumb">
+            <svg viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#1c2a3a"/>
+              <g fill="#64b0ff" opacity=".95">
+                <circle cx="90" cy="70" r="8"/><circle cx="118" cy="62" r="8"/><circle cx="146" cy="70" r="8"/>
+                <circle cx="82" cy="96" r="8"/><circle cx="110" cy="88" r="8"/><circle cx="138" cy="96" r="8"/>
+                <circle cx="98" cy="118" r="8"/><circle cx="126" cy="110" r="8"/><circle cx="154" cy="118" r="8"/>
+              </g>
+              <g fill="#ff6fa8">
+                <circle cx="110" cy="88" r="10"/><circle cx="138" cy="96" r="10"/>
+                <circle cx="126" cy="110" r="10"/><circle cx="154" cy="118" r="10"/>
+              </g>
+              <g fill="#ffb347">
+                <circle cx="220" cy="72" r="8"/><circle cx="248" cy="64" r="8"/><circle cx="268" cy="86" r="8"/>
+                <circle cx="208" cy="98" r="8"/><circle cx="236" cy="108" r="8"/><circle cx="260" cy="118" r="8"/>
+                <circle cx="224" cy="128" r="8"/>
+              </g>
+            </svg>
+          </div>
+          <h2>بلور سه‌بعدی و یاخته واحد</h2>
+          <div class="tags"><span class="tag">نیروی مولکولی</span></div>
+        </a>
+
+        <a class="sim-card" href="sims/surface-tension.html" data-cat="molecular">
+          <div class="thumb">
+            <svg viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#b8e0f5"/>
+              <path d="M0 90 Q80 70 160 90 T320 90 V200 H0 Z" fill="#4a90e2"/>
+              <ellipse cx="80" cy="58" rx="28" ry="26" fill="#7fb8ee" stroke="#2b6cb0" stroke-width="2"/>
+              <ellipse cx="160" cy="78" rx="42" ry="16" fill="#7fb8ee" stroke="#2b6cb0" stroke-width="2"/>
+              <ellipse cx="250" cy="86" rx="54" ry="8" fill="#7fb8ee" stroke="#2b6cb0" stroke-width="2"/>
+              <rect x="148" y="48" width="24" height="10" rx="5" fill="#6c757d"/>
+            </svg>
+          </div>
+          <h2>کشش سطحی و موئینگی</h2>
+          <div class="tags"><span class="tag">نیروی مولکولی</span></div>
+        </a>
+
+        <a class="sim-card" href="sims/hydrostatic.html" data-cat="pressure">
+          <div class="thumb">
+            <svg viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#f4efe3"/>
+              <path d="M28 168 H292 V140 H28 Z" fill="#5dade2"/>
+              <path d="M52 140 L52 72 L72 50 L92 72 L92 140 Z" fill="#5dade2"/>
+              <rect x="138" y="50" width="44" height="90" fill="#5dade2"/>
+              <path d="M220 140 L232 82 L244 50 L256 82 L268 140 Z" fill="#5dade2"/>
+              <path d="M50 46 H94 V140" fill="none" stroke="#6b7785" stroke-width="3"/>
+              <rect x="136" y="46" width="48" height="94" fill="none" stroke="#6b7785" stroke-width="3"/>
+              <path d="M218 46 H270 V140" fill="none" stroke="#6b7785" stroke-width="3"/>
+              <rect x="26" y="138" width="268" height="32" fill="none" stroke="#6b7785" stroke-width="3"/>
+              <line x1="36" y1="108" x2="284" y2="108" stroke="#9b59b6" stroke-width="2" stroke-dasharray="5 4"/>
+              <circle cx="72" cy="108" r="5" fill="#c0392b"/>
+              <circle cx="160" cy="108" r="5" fill="#c0392b"/>
+              <circle cx="244" cy="108" r="5" fill="#c0392b"/>
+            </svg>
+          </div>
+          <h2>نقاط هم‌تراز</h2>
+          <div class="tags"><span class="tag">فشار</span></div>
+        </a>
+
+        <a class="sim-card" href="sims/u-tube.html" data-cat="pressure">
+          <div class="thumb">
+            <svg viewBox="0 0 320 200">
+              <rect width="320" height="200" fill="#d7eef9"/>
+              <rect y="168" width="320" height="32" fill="#8b5a2b"/>
+              <path d="M108 36 V118 A52 52 0 0 0 212 118 V36" fill="none" stroke="#6b7785" stroke-width="22" stroke-linecap="butt"/>
+              <path d="M108 36 V118 A52 52 0 0 0 212 118 V36" fill="none" stroke="#fff" stroke-width="16" opacity=".35"/>
+              <path d="M108 92 V118 A52 52 0 0 0 212 118 V58" fill="none" stroke="#3d9be8" stroke-width="16"/>
+              <line x1="108" y1="86" x2="108" y2="40" stroke="#2b8a3e" stroke-width="2"/>
+              <polygon points="108,40 103,50 113,50" fill="#2b8a3e"/>
+              <line x1="212" y1="52" x2="212" y2="28" stroke="#2b8a3e" stroke-width="2"/>
+              <polygon points="212,28 207,38 217,38" fill="#2b8a3e"/>
+              <line x1="118" y1="92" x2="222" y2="58" stroke="#c0392b" stroke-width="2"/>
+            </svg>
+          </div>
+          <h2>لوله U شکل</h2>
+          <div class="tags"><span class="tag">فشار</span></div>
+        </a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="inner">
+    <div>آزمایشگاه مجازی فیزیک</div>
+    <div>تعامل تصویری، متن کم</div>
+  </div>
+  <div class="bar">بکشید · اسلایدر · مشاهده کنید</div>
+</footer>
+<script>
+var titles={all:'همه شبیه‌سازی‌ها',molecular:'نیروی مولکولی',pressure:'فشار'};
+document.querySelectorAll('#filters .chip').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('#filters .chip').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    var f=b.getAttribute('data-f');
+    document.getElementById('ptitle').textContent=titles[f];
+    document.querySelectorAll('.sim-card').forEach(function(c){
+      c.style.display=(f==='all'||c.getAttribute('data-cat')===f)?'flex':'none';
+    });
+  };
+});
+</script>
+</body>
+</html>

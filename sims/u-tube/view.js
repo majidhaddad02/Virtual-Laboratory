@@ -115,11 +115,10 @@
   function formulaNum(layers, hideUnk, model) {
     if (!layers.length) return 'P<sub>atm</sub>';
     var s = 'P<sub>atm</sub>';
-    var i, h, unk;
-    unk = model.unk();
+    var i, h;
     for (i = 0; i < layers.length; i++) {
       h = layers[i].h;
-      if (hideUnk && !model.revealed.value && unk && layers[i].id === (unk.arm === 'L' ? model.left() : model.right())[unk.i].id && Math.abs(h - model.unkH()) < 0.05) {
+      if (hideUnk && !model.revealed.value && layers[i].unknown) {
         s += ' + ρ<sub>' + liqName(layers[i].id) + '</sub> g (؟)';
       } else {
         s += ' + ρ<sub>' + liqName(layers[i].id) + '</sub> g (' + h.toFixed(1) + ')';
@@ -360,10 +359,10 @@
         return;
       }
       model.judge();
-      var aL = model.layersAbove('L', model.ref.value);
-      var aR = model.layersAbove('R', model.ref.value);
-      html = '<div>' + PL.t('sim.u-tube.left') + ': <span class="formula">' + formulaNum(aL, model.unk().arm === 'L', model) + '</span></div>';
-      html += '<div>' + PL.t('sim.u-tube.right') + ': <span class="formula">' + formulaNum(aR, model.unk().arm === 'R', model) + '</span></div>';
+      var aL = model.equationTerms('L', model.ref.value);
+      var aR = model.equationTerms('R', model.ref.value);
+      html = '<div>' + PL.t('sim.u-tube.left') + ': <span class="formula">' + formulaNum(aL, true, model) + '</span></div>';
+      html += '<div>' + PL.t('sim.u-tube.right') + ': <span class="formula">' + formulaNum(aR, true, model) + '</span></div>';
       if (model.valid.value) {
         html += '<span class="formula">P<sub>L</sub> = P<sub>R</sub></span>';
         html += '<span class="formula">' + formulaOf(aL).replace('P<sub>atm</sub> + ', '') + ' = ' + formulaOf(aR).replace('P<sub>atm</sub> + ', '') + '</span>';

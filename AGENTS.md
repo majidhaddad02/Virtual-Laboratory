@@ -8,7 +8,7 @@ Routing (task → read first):
 - Port leftovers / known gaps → `docs/ISSUES.md`
 - Shared helpers → `shared/README.md`
 
-Commands: `npm test` · `npm run build-registry` · `npm run sync-pages`
+Commands: `npm test` · `npm run build-registry` · `npm run sync-pages` · `npm run pack`
 
 After editing metadata or core scripts, run both generators.
 

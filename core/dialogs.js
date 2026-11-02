@@ -31,11 +31,15 @@
     return key === 'Escape' || key === 'Esc';
   }
 
-  function bindDialog(bg, dialogEl, initialFocus, onClose) {
+  function bindDialog(bg, dialogEl, initialFocus, onClose, opts) {
+    opts = opts || {};
+    var persist = !!opts.persist;
     var opener = document.activeElement;
     function finish() {
       document.removeEventListener('keydown', onKey, true);
-      close(bg);
+      bg._plFinish = null;
+      if (persist) bg.classList.add('hidden');
+      else close(bg);
       if (opener && opener.focus) opener.focus();
       if (onClose) onClose();
     }
@@ -60,10 +64,15 @@
       items[nextFocusIndex(idx, items.length, !!e.shiftKey)].focus();
     }
     document.addEventListener('keydown', onKey, true);
-    bg.addEventListener('click', function (e) {
-      if (e.target === bg) finish();
-    });
-    document.body.appendChild(bg);
+    if (!bg._plBackdropBound) {
+      bg._plBackdropBound = true;
+      bg.addEventListener('click', function (e) {
+        if (e.target === bg && bg._plFinish) bg._plFinish();
+      });
+    }
+    bg._plFinish = finish;
+    if (!bg.parentNode) document.body.appendChild(bg);
+    bg.classList.remove('hidden');
     if (initialFocus && initialFocus.focus) initialFocus.focus();
     return finish;
   }
@@ -71,6 +80,7 @@
   PL.dialogs = {
     nextFocusIndex: nextFocusIndex,
     shouldClose: shouldClose,
+    bind: bindDialog,
     about: function (entry) {
       var bg = backdrop();
       var d = document.createElement('div');

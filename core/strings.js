@@ -12,6 +12,20 @@
     'ui.pause': 'توقف',
     'ui.step': 'گام',
     'ui.speed': 'سرعت',
-    'ui.back': 'فیزیک‌لب'
+    'ui.back': 'فیزیک‌لب',
+    'ui.activity': 'فعالیت',
+    'ui.activityPredict': 'پیش‌بینی',
+    'ui.activityExperiment': 'آزمایش',
+    'ui.activityResult': 'نتیجه',
+    'ui.activityReveal': 'نمایش نتیجه',
+    'ui.activityCorrect': 'درست.',
+    'ui.activityIncorrect': 'نادرست.',
+    'ui.activityNeedChoice': 'یک گزینه را انتخاب کن.',
+    'ui.activityPrint': 'چاپ برگه',
+    'ui.activityClear': 'پاک کردن برگه',
+    'ui.activityName': 'نام',
+    'ui.activityDate': 'تاریخ',
+    'ui.activityWorksheet': 'برگه کار',
+    'ui.activityPreset': 'تنظیم آزمایش'
   });
 })(window.PL = window.PL || {});

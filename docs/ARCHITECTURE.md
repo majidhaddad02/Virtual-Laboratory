@@ -12,7 +12,7 @@ No ES modules, no bundler, no `fetch`. Data files are `.js` that assign to `PL.*
 
 ## Script order
 
-Browser pages load core files in the order listed in `core/manifest.json` (that JSON is for tests/tools only; HTML between `<!-- core:start -->` and `<!-- core:end -->` is rewritten by `npm run sync-pages`). Then optional `<!-- shared:start -->` files, then `data/registry.js` or sim files (`strings.js`, `model.js`, `view.js`, `main.js`).
+Browser pages load core files in the order listed in `core/manifest.json` (that JSON is for tests/tools only; HTML between `<!-- core:start -->` and `<!-- core:end -->` is rewritten by `npm run sync-pages`). Then optional `<!-- shared:start -->` files, then `data/registry.js` or sim files (`strings.js`, `model.js`, `view.js`, `activity.js`, `main.js`).
 
 Paths from a sim page (`sims/<id>/index.html`) use `../../core/...`. Paths from the catalog use `core/...`.
 
@@ -30,6 +30,7 @@ Paths from a sim page (`sims/<id>/index.html`) use `../../core/...`. Paths from 
 | `draw.js` | Canvas helpers (DPR fit). |
 | `widgets.js` | `PL.ui.*` two-way bound controls. |
 | `dialogs.js` | About-model and confirm-reset dialogs. |
+| `activity.js` | `PL.Activity` challenges and worksheet. |
 | `shell.js` | `PL.Shell.start(simDef, rootEl)`. |
 
 Domain packing lives in `shared/crystals/lattice.js` (`PL.shared.crystals`), not core.
@@ -52,7 +53,7 @@ View: `{ mount(stageEl, panelEl), layout(w, h, dpr), draw(), reset?(), dispose()
 
 Screen: `{ id, title (i18n key), icon (SVG string), createModel(), createView(model) }`.
 
-`PL.Shell.start({ id, screens }, rootEl)` looks up metadata in `PL.registry` by `id`.
+`PL.Shell.start({ id, screens }, rootEl)` looks up metadata in `PL.registry` by `id`. If `PL.activities[id]` is defined, the top bar shows «فعالیت» and a non-modal drawer opens opposite the control panel (bottom sheet below 760 px). No focus trap. Reset All does not clear worksheet fields. Each challenge has `goal` (index into `meta.goals`; all goals covered) and optional `preset` (Reset All, then Property values). Answers are never taken from live sim state.
 
 ## Loop
 
@@ -82,6 +83,12 @@ Ported: `sims/crystalline/`, `sims/crystalline-3d/`, `sims/hydrostatic/`, `sims/
 
 `PL.Shell.start` accepts optional `fit: true` for compact one-page labs (`sim-app fit`).
 
+## Fonts
+
+`css/tokens.css` loads Vazirmatn from `fonts/*.woff2` (SIL OFL). Fallback: Tahoma, Segoe UI, sans-serif. No CDN.
+
 ## Tools
 
-`node tools/new-sim.js <id>` creates `sims/<id>/` with marker blocks, `meta.js`, placeholder `thumb.svg`, `strings.js`, `model.js`, `view.js`, `main.js`, `docs/sims/<id>.md`, and `tests/sims/<id>.test.js`, then runs `build-registry` and `sync-pages`.
+`node tools/new-sim.js <id>` creates `sims/<id>/` with marker blocks, `meta.js`, placeholder `thumb.svg`, `strings.js`, `model.js`, `view.js`, `activity.js`, `main.js`, `docs/sims/<id>.md`, and `tests/sims/<id>.test.js`, then runs `build-registry` and `sync-pages`.
+
+`node tools/pack.js` writes `dist/physics-lab.zip` (deflate, no extra deps). Omits `.git`, `legacy/`, `tests/`, `tools/`, `dist/`, `css/phet.css`.

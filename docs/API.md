@@ -123,6 +123,24 @@ DOM dialogs:
 
 - `about(entry)` → `{ close }`. Lists `goals`, `modelNotes`, `version`. Escape, Tab trap, backdrop click, focus restore.
 - `confirmReset(onYes)` → `{ close }`. Backdrop click = cancel.
+- `bind(bg, dialogEl, initialFocus, onClose?, opts?)` → `finish`. `opts.persist` (boolean, default false) hides instead of removing the backdrop.
+
+## PL.Activity
+
+Pure helpers (unit-tested):
+
+- `validateChallenge(ch)` → `{ ok, reason }`. Requires `id`, `title`, `question`, `options` (≥2 non-empty strings), `answerIndex` in range, integer `goal` ≥ 0, `experiment`, `explanation`. Optional `preset` object.
+- `validate(def)` → `{ ok, errors }`. Needs 1–5 valid challenges. Optional `worksheet.sections` typed if present.
+- `coverGoals(def, goals)` → `{ ok, errors }`. Every `goal` in range; every `meta.goals` index used at least once.
+- `isCorrect(challenge, selectedIndex)` → boolean.
+- `checkAnswer(challenge, selectedIndex)` → `{ correct, selected, answerIndex, explanation }`. Does not read the sim.
+- `isProperty(x)` → boolean.
+- `applyPreset(model, preset)` sets each key if it is a Property. Used after Reset All.
+- `presetKeysValid(preset, model)` → boolean. Every preset key must be a Property on the model.
+
+DOM:
+
+- `mount(containerEl, activityDef, ids, opts?)` → `{ el }`. `ids` string prefixes radio `name`s. `opts.onPreset(preset)` for «تنظیم آزمایش». Predict / experiment / result, worksheet, print and clear. Nothing is stored.
 
 ## PL.Shell.start
 
@@ -132,6 +150,7 @@ DOM dialogs:
 - `simDef.screens` `{ id, title, icon?, createModel, createView }[]`
 - `simDef.fit` boolean default false (`sim-app fit`)
 - Links `model.playing` once per model; unlinks on dispose.
+- Top-bar «فعالیت» appears only if `PL.activities[simDef.id]` exists. Non-modal side drawer opposite the control panel (`aria-expanded`, Escape closes, focus returns to the button, no focus trap). Below 760 px: bottom sheet. Reset All does not clear worksheet fields. «تنظیم آزمایش» = Reset All then `applyPreset`.
 
 ## PL.shared.crystals
 
@@ -189,3 +208,11 @@ Taken from `css/*.css` and existing views.
 - `dark` — dark stage background
 - `on` — selected control
 - `water` / `oil` / `hg` / `mode` — liquid/mode button skins
+- `sim-top-actions` — right-side top-bar button cluster
+- `activity-open` — sim-app while the activity drawer is open
+- `pl-activity` — activity root
+- `pl-activity-drawer` / `pl-activity-body` / `pl-activity-close` — non-modal drawer
+- `pl-challenges` / `pl-challenge` / `pl-step` / `pl-options` / `pl-option` — challenge layout
+- `pl-preset` — apply experiment preset
+- `pl-reveal` / `pl-reveal-live` — result button and aria-live region
+- `pl-worksheet` / `pl-worksheet-meta` / `pl-worksheet-section` / `pl-worksheet-table` / `pl-textarea` / `pl-worksheet-actions` — printable worksheet

@@ -193,3 +193,63 @@ canvas{width:100%;height:100%;display:block;flex:1;min-height:140px;touch-action
 @media(max-width:860px){
   .sim-app.fit .sim-panel{width:100%;max-height:38dvh;overflow:auto}
 }
+.sim-top-actions{display:flex;gap:8px;align-items:center;flex:none}
+.sim-body{position:relative}
+.pl-activity-drawer{
+  width:280px;flex:none;background:#f4f1ea;border-inline-end:1px solid #d8d0c0;
+  padding:12px;overflow:auto;display:flex;flex-direction:column;gap:10px;
+}
+.pl-activity-drawer.hidden{display:none}
+.pl-activity-close{min-height:44px;margin-bottom:10px}
+@media(max-width:760px){
+  .pl-activity-drawer{
+    position:absolute;inset-inline:0;bottom:0;top:auto;width:auto;height:min(70vh,420px);
+    z-index:20;border:0;border-top:2px solid #c9a60e;box-shadow:0 -8px 24px rgba(0,0,0,.18);
+  }
+}
+.pl-activity-body{display:flex;flex-direction:column;gap:14px}
+.pl-challenges{display:flex;flex-direction:column;gap:14px}
+.pl-challenge{
+  background:#fff8dc;border:2px solid #c9a60e;border-radius:10px;padding:10px 12px;
+}
+.pl-challenge h3{margin:0 0 8px;font-size:.95rem}
+.pl-step{margin:8px 0}
+.pl-step h4{margin:0 0 6px;font-size:.82rem;font-weight:800}
+.pl-step p{margin:0 0 8px;font-size:.88rem;line-height:1.5}
+.pl-options{border:0;margin:0;padding:0}
+.pl-options legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.pl-option{
+  display:flex;align-items:center;gap:8px;min-height:44px;font-size:.88rem;cursor:pointer;
+}
+.pl-preset,.pl-reveal{min-height:44px;min-width:44px;margin-top:6px}
+.pl-reveal-live{margin-top:8px;font-size:.86rem;line-height:1.45;min-height:1.4em}
+.pl-reveal-live.ok{color:var(--ok)}
+.pl-reveal-live.bad{color:var(--bad)}
+.pl-worksheet{
+  background:#fff;border:2px solid var(--line);border-radius:10px;padding:12px;
+}
+.pl-worksheet h3{margin:0 0 10px}
+.pl-worksheet-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.pl-worksheet-meta label{display:flex;align-items:center;gap:6px;min-height:44px;font-weight:700}
+.pl-worksheet-meta input{
+  min-height:44px;border:2px solid #8a6a10;border-radius:8px;padding:6px 8px;background:#fff8dc;
+}
+.pl-worksheet-section{margin:12px 0}
+.pl-worksheet-section h4{margin:0 0 8px}
+.pl-worksheet-table{width:100%;border-collapse:collapse}
+.pl-worksheet-table th,.pl-worksheet-table td{border:1px solid var(--line);padding:4px}
+.pl-worksheet-table input{
+  width:100%;min-height:44px;border:1px solid #c9a60e;border-radius:6px;padding:6px;background:#fffdf4;
+}
+.pl-textarea{display:flex;flex-direction:column;gap:6px;font-weight:700;margin:8px 0}
+.pl-textarea textarea{
+  min-height:88px;border:2px solid #8a6a10;border-radius:8px;padding:8px;font:inherit;
+}
+.pl-worksheet-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pl-worksheet-actions button{min-height:44px;min-width:44px}
+@media print{
+  body *{visibility:hidden}
+  .pl-worksheet,.pl-worksheet *{visibility:visible}
+  .pl-worksheet{position:absolute;inset:0;border:0;background:#fff}
+  .pl-worksheet-actions,.pl-challenges,.pl-activity-close{display:none}
+}

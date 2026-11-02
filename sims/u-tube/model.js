@@ -79,6 +79,12 @@
   }
 
   function layersAbove(arm, y) {
+    return equationTerms(arm, y, -1).map(function (t) {
+      return { id: t.id, h: t.h };
+    });
+  }
+
+  function equationTerms(arm, y, unkIndex) {
     var out = [];
     var pos = sumH(arm);
     var i, bot, take;
@@ -89,11 +95,21 @@
         continue;
       }
       take = pos - Math.max(y, bot);
-      if (take > 0.02) out.push({ id: arm[i].id, h: take });
+      if (take > 0.02) {
+        out.push({ id: arm[i].id, h: take, unknown: i === unkIndex, i: i });
+      }
       pos = bot;
       if (y >= bot - 1e-9) break;
     }
     return out.reverse();
+  }
+
+  function unknownTermCount(termsL, termsR) {
+    var n = 0;
+    var i;
+    for (i = 0; i < termsL.length; i++) if (termsL[i].unknown) n++;
+    for (i = 0; i < termsR.length; i++) if (termsR[i].unknown) n++;
+    return n;
   }
 
   function pressAt(arm, y, g) {
@@ -293,6 +309,11 @@
       layersAbove: function (side, y) {
         return layersAbove(side === 'L' ? left : right, y);
       },
+      equationTerms: function (side, y) {
+        var arm = side === 'L' ? left : right;
+        var idx = unk && unk.arm === side ? unk.i : -1;
+        return equationTerms(arm, y, idx);
+      },
       pressAt: function (side, y) {
         return pressAt(side === 'L' ? left : right, y, g.value);
       },
@@ -361,6 +382,8 @@
     sumH: sumH,
     volumeOf: volumeOf,
     layersAbove: layersAbove,
+    equationTerms: equationTerms,
+    unknownTermCount: unknownTermCount,
     pressAt: pressAt,
     createModel: createModel
   };

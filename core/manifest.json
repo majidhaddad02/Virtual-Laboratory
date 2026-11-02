@@ -9,5 +9,6 @@
   "core/draw.js",
   "core/widgets.js",
   "core/dialogs.js",
+  "core/activity.js",
   "core/shell.js"
 ]

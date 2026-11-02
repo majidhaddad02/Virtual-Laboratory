@@ -55,6 +55,7 @@ var index = [
   '<script src="strings.js"></script>',
   '<script src="model.js"></script>',
   '<script src="view.js"></script>',
+  '<script src="activity.js"></script>',
   '<script src="main.js"></script>',
   '<!-- sim:end -->',
   '</body>',
@@ -138,6 +139,58 @@ var view = [
   ''
 ].join('\n');
 
+var activity = [
+  '(function (PL) {',
+  '  PL.activities = PL.activities || {};',
+  "  PL.activities['" + id + "'] = {",
+  '    challenges: [',
+  '      {',
+  "        id: 'c1',",
+  "        title: 'چالش ۱',",
+  "        question: 'پرسش را اینجا بنویس.',",
+  "        options: ['گزینه درست', 'گزینه دیگر'],",
+  '        answerIndex: 0,',
+  '        goal: 0,',
+  '        preset: {},',
+  "        experiment: 'در شبیه‌سازی این را بیازمای.',",
+  "        explanation: 'توضیح درست را اینجا بنویس.'",
+  '      },',
+  '      {',
+  "        id: 'c2',",
+  "        title: 'چالش ۲',",
+  "        question: 'پرسش را اینجا بنویس.',",
+  "        options: ['گزینه درست', 'گزینه دیگر'],",
+  '        answerIndex: 0,',
+  '        goal: 1,',
+  "        experiment: 'در شبیه‌سازی این را بیازمای.',",
+  "        explanation: 'توضیح درست را اینجا بنویس.'",
+  '      },',
+  '      {',
+  "        id: 'c3',",
+  "        title: 'چالش ۳',",
+  "        question: 'پرسش را اینجا بنویس.',",
+  "        options: ['گزینه درست', 'گزینه دیگر'],",
+  '        answerIndex: 0,',
+  '        goal: 2,',
+  "        experiment: 'در شبیه‌سازی این را بیازمای.',",
+  "        explanation: 'توضیح درست را اینجا بنویس.'",
+  '      }',
+  '    ],',
+  '    worksheet: {',
+  '      sections: [',
+  '        {',
+  "          title: 'برگه',",
+  "          columns: ['اندازه', 'مقدار'],",
+  "          rows: [['', '']],",
+  "          textareas: ['نتیجه‌گیری']",
+  '        }',
+  '      ]',
+  '    }',
+  '  };',
+  '})(window.PL = window.PL || {});',
+  ''
+].join('\n');
+
 var main = [
   '(function (PL) {',
   "  var ICON = '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"8\" fill=\"#521764\"/></svg>';",
@@ -214,6 +267,7 @@ fs.writeFileSync(path.join(ROOT, 'docs/sims', id + '.md'), brief);
 fs.writeFileSync(path.join(dir, 'strings.js'), strings);
 fs.writeFileSync(path.join(dir, 'model.js'), model);
 fs.writeFileSync(path.join(dir, 'view.js'), view);
+fs.writeFileSync(path.join(dir, 'activity.js'), activity);
 fs.writeFileSync(path.join(dir, 'main.js'), main);
 fs.writeFileSync(path.join(dir, 'meta.js'), meta);
 fs.writeFileSync(path.join(dir, 'thumb.svg'), thumb);

@@ -69,7 +69,23 @@ Measured `amorphSites` + `minDistance` over seeds 1–20 (mulberry32): minD in [
 
 ### U-tube equation vs reference level
 
-`solveUnknown(refY)` now takes the reference (default 0) and identifies the unknown by `(arm, index)`. The equation step in `sims/u-tube/view.js` builds formulas from `layersAbove(..., model.ref.value)` so the overlay follows the purple line, but it still hides the unknown by comparing that slice height to the full `unkH()`. If the student moves the reference off the join, the unknown term may show a partial number instead of `؟`. View left unchanged.
+Fixed in Phase E: `equationTerms` tags the unknown by `(arm, index)` the same way `solveUnknown` does. The equation step now always shows `؟` for that layer at any valid reference. A model test checks exactly one unknown term at y=0 and another level inside the connecting liquid.
+
+## Phase E (activity)
+
+- Activity answers are not stored (by design). Worksheet fields live in the drawer DOM; closing with Escape hides the drawer without wiping them. Reset All does not touch them.
+- Drawer is non-modal, opposite the control panel (panel is inline-end / left in RTL; drawer is inline-start / right). Below 760 px it becomes a bottom sheet and may cover part of the stage.
+- «تنظیم آزمایش» resets then applies `preset`. Answers are never auto-graded from live sim state.
+- Print CSS hides everything except `.pl-worksheet`. Browser print dialogs still depend on the user agent.
+- Surface-tension Jurin overestimate at r = 2 mm is stated in `docs/sims/surface-tension.md`; the capillary challenge uses the 1/r trend, not a numeric height.
+- No physics claim was dropped for lack of certainty.
+
+## Phase F (docs, pack, fonts)
+
+- Vazirmatn woff2 is local under `fonts/`. Browsers without woff2 fall back to Tahoma.
+- `fonts/OFL.txt` is the SIL license text and contains SIL/GitHub URLs required by that license; runtime pages do not load it.
+- `npm run pack` writes `dist/physics-lab.zip` (gitignored). Unzip and open `index.html` as `file://`.
+- `css/phet.css` stays in the repo for `legacy/` parity and is omitted from the zip.
 
 ### Oil density naming
 

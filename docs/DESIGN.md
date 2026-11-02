@@ -59,7 +59,7 @@ sims/<id>/*.js             strings, model, view, main, meta
 legacy/                    pre-port HTML for parity
 ```
 
-Preview from repo root: `python3 -m http.server 8000 --bind 0.0.0.0`. Also works as `file://`.
+`fonts/` Vazirmatn woff2 (local; SIL OFL). Preview from repo root: `python3 -m http.server 8000 --bind 0.0.0.0`. Also works as `file://`. Offline zip: `npm run pack` → `dist/physics-lab.zip`.
 
 ## Physics defaults (when a sim needs them)
 

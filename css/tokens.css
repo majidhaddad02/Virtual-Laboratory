@@ -1,3 +1,24 @@
+@font-face{
+  font-family:Vazirmatn;
+  src:url(../fonts/Vazirmatn-Regular.woff2) format("woff2");
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face{
+  font-family:Vazirmatn;
+  src:url(../fonts/Vazirmatn-Bold.woff2) format("woff2");
+  font-weight:700;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face{
+  font-family:Vazirmatn;
+  src:url(../fonts/Vazirmatn-Bold.woff2) format("woff2");
+  font-weight:800;
+  font-style:normal;
+  font-display:swap;
+}
 :root{
   --purple:#521764;
   --lilac:#967ba8;

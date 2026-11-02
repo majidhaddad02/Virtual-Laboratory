@@ -29,6 +29,8 @@ If Node is missing, skip running tests; do not install packages.
 - `tests/sims/hydrostatic.test.js` — gauge pressure ∝ depth; ∝ rho; P(0)=P0.
 - `tests/sims/u-tube.test.js` — equal P in connected fluid at several y; g scales P not heights; Σρgh equal at join; volume conserved; density relations; unknown height from equation at y=0 and another level; reject different liquids.
 - `tests/sims/surface-tension.test.js` — surface net inward vs bulk ~0; Jurin 1/r and mercury depression; soap sink; adhesion↔θ; Reset All.
+- `tests/activity.test.js` — pure `isCorrect` / `checkAnswer` / `validate` (1–5) / `coverGoals` / `applyPreset`; every activity covers `meta.goals`; every `preset` key is a Property on that sim's model.
 - `tests/smoke.test.js` — each ported view `draw()` with a Proxy stub 2D context.
+- `tests/pack.test.js` — pack file list omits `legacy/` `tests/` `tools/`; zip is unzip-readable.
 
 Violated invariants are `test.todo` plus a row in `docs/ISSUES.md`. Do not “fix physics” during a port.

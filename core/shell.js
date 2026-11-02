@@ -44,7 +44,22 @@
     });
     top.appendChild(back);
     top.appendChild(title);
-    top.appendChild(about);
+    var topActions = document.createElement('div');
+    topActions.className = 'sim-top-actions';
+    topActions.appendChild(about);
+    var activityOpen = false;
+    var activityBtn = null;
+    var activityDef = PL.activities && PL.activities[simDef.id];
+    if (activityDef && PL.Activity) {
+      activityBtn = document.createElement('button');
+      activityBtn.type = 'button';
+      activityBtn.className = 'about-btn';
+      activityBtn.textContent = PL.t('ui.activity');
+      activityBtn.setAttribute('aria-expanded', 'false');
+      activityBtn.setAttribute('aria-controls', 'pl-activity-drawer');
+      topActions.appendChild(activityBtn);
+    }
+    top.appendChild(topActions);
 
     var body = document.createElement('div');
     body.className = 'sim-body';
@@ -52,6 +67,11 @@
     stage.className = 'sim-stage';
     var panel = document.createElement('aside');
     panel.className = 'sim-panel';
+    var drawer = document.createElement('aside');
+    drawer.id = 'pl-activity-drawer';
+    drawer.className = 'pl-activity-drawer hidden';
+    drawer.setAttribute('aria-label', PL.t('ui.activity'));
+    body.appendChild(drawer);
     body.appendChild(stage);
     body.appendChild(panel);
 
@@ -178,6 +198,57 @@
       views[active].draw();
     }
 
+    function applyChallengePreset(preset) {
+      resetAll();
+      PL.Activity.applyPreset(models[active], preset);
+      views[active].draw();
+    }
+
+    function setActivityOpen(open) {
+      activityOpen = !!open;
+      if (activityOpen) {
+        drawer.classList.remove('hidden');
+        rootEl.classList.add('activity-open');
+      } else {
+        drawer.classList.add('hidden');
+        rootEl.classList.remove('activity-open');
+      }
+      if (activityBtn) activityBtn.setAttribute('aria-expanded', activityOpen ? 'true' : 'false');
+      layout();
+    }
+
+    function closeActivity() {
+      if (!activityOpen) return;
+      setActivityOpen(false);
+      if (activityBtn && activityBtn.focus) activityBtn.focus();
+    }
+
+    function onActivityKey(e) {
+      if (!activityOpen) return;
+      if (PL.dialogs.shouldClose(e.key)) {
+        if (e.preventDefault) e.preventDefault();
+        closeActivity();
+      }
+    }
+
+    if (activityBtn) {
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'pl-activity-close';
+      closeBtn.textContent = PL.t('ui.close');
+      drawer.appendChild(closeBtn);
+      var activityBody = document.createElement('div');
+      activityBody.className = 'pl-activity-body';
+      PL.Activity.mount(activityBody, activityDef, simDef.id, { onPreset: applyChallengePreset });
+      drawer.appendChild(activityBody);
+      closeBtn.addEventListener('click', closeActivity);
+      activityBtn.addEventListener('click', function () {
+        if (activityOpen) closeActivity();
+        else setActivityOpen(true);
+      });
+      document.addEventListener('keydown', onActivityKey);
+    }
+
     playBtn.addEventListener('click', function () {
       var m = models[active];
       if (m.playing) m.playing.value = !m.playing.value;
@@ -207,6 +278,8 @@
         }
         playLinks = [];
         window.removeEventListener('resize', layout);
+        document.removeEventListener('keydown', onActivityKey);
+        setActivityOpen(false);
       }
     };
   }

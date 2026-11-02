@@ -156,6 +156,9 @@
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 
+# Pack output
+/dist/
+
 # Compressed files
 *.zip
 *.rar

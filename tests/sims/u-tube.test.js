@@ -125,6 +125,24 @@ describe('u-tube model', () => {
     }
   });
 
+  it('exactly one equation term is the unknown at valid reference levels', () => {
+    const { PL } = ctx();
+    const U = PL.sims['u-tube'];
+    var i, y, span, levels, tL, tR, n;
+    for (i = 0; i < 3; i++) {
+      const model = U.createModel();
+      model.caseIndex.value = i;
+      span = connectingSpan(model);
+      levels = [0, span * 0.4];
+      for (y of levels) {
+        tL = model.equationTerms('L', y);
+        tR = model.equationTerms('R', y);
+        n = U.unknownTermCount(tL, tR);
+        assert.strictEqual(n, 1, 'case ' + i + ' y=' + y + ' count=' + n);
+      }
+    }
+  });
+
   it('rejects same height in different liquids', () => {
     const { PL } = ctx();
     const model = PL.sims['u-tube'].createModel();

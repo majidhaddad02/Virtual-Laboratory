@@ -21,5 +21,7 @@ describe('API docs', () => {
     check(PL.dialogs);
     check(PL.format);
     check(PL.shared.crystals);
+    assert.ok(text.indexOf('Activity') !== -1, 'docs/API.md missing Activity');
+    check(PL.Activity);
   });
 });

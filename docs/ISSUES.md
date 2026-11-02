@@ -80,6 +80,14 @@ Fixed in Phase E: `equationTerms` tags the unknown by `(arm, index)` the same wa
 - Surface-tension Jurin overestimate at r = 2 mm is stated in `docs/sims/surface-tension.md`; the capillary challenge uses the 1/r trend, not a numeric height.
 - No physics claim was dropped for lack of certainty.
 
+## U-tube pour-and-settle screen
+
+- Drawing helpers (`geometry`, `tubeClip`, `layerFill`) were duplicated in `settle-view.js` rather than extracted, so the existing measurement screen stays byte-for-byte.
+- Shell already hides the time bar when `model.timeBased` is false; no shell change for mixed screens.
+- Activity stays at 5 challenges: the kerosene-density item was omitted so goals 0–3 stay covered without dropping a measurement challenge.
+- Pour-and-settle is overdamped; real water would slosh. Snap to analytic equilibrium when `|H| < 0.02` cm.
+- Visual quality, animation smoothness, and real-browser layout at 360/1920 were not checked in a browser in this pass.
+
 ## Phase F (docs, pack, fonts)
 
 - Vazirmatn woff2 is local under `fonts/`. Browsers without woff2 fall back to Tahoma.

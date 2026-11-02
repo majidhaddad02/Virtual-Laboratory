@@ -24,6 +24,13 @@ function stubDocument() {
         this.children.push(c);
         return c;
       },
+      insertBefore: function (c, ref) {
+        c.parentNode = this;
+        var i = ref ? this.children.indexOf(ref) : -1;
+        if (i < 0) this.children.push(c);
+        else this.children.splice(i, 0, c);
+        return c;
+      },
       addEventListener: function () {},
       removeEventListener: function () {},
       querySelectorAll: function () { return []; },

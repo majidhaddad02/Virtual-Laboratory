@@ -24,6 +24,12 @@ Run after `npm test`, `node tools/build-registry.js --check`, and `node tools/sy
 - [ ] «تنظیم آزمایش» is Reset All then `preset` (no auto-grade from sim state)
 - [ ] Print shows only the worksheet
 
+## U-tube
+
+- [ ] First tab is «ریختن و تعادل» with play/pause/step/speed
+- [ ] Second tab is «اندازه‌گیری و محاسبه» with no time bar (unchanged lab)
+- [ ] Pour locks prediction and top-liquid radios; Reset All unlocks both screens
+
 ## Offline pack
 
 - [ ] `npm run pack` writes `dist/physics-lab.zip`

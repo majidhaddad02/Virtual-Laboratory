@@ -3,16 +3,29 @@
   PL.Shell.start({
     id: 'u-tube',
     fit: true,
-    screens: [{
-      id: 'main',
-      title: 'sim.u-tube.screen',
-      icon: ICON,
-      createModel: function () {
-        return PL.sims['u-tube'].createModel();
+    screens: [
+      {
+        id: 'settle',
+        title: 'sim.u-tube.settle.screen',
+        icon: ICON,
+        createModel: function () {
+          return PL.sims['u-tube'].settle.createModel();
+        },
+        createView: function (model) {
+          return PL.sims['u-tube'].createSettleView(model);
+        }
       },
-      createView: function (model) {
-        return PL.sims['u-tube'].createView(model);
+      {
+        id: 'main',
+        title: 'sim.u-tube.screenMeasure',
+        icon: ICON,
+        createModel: function () {
+          return PL.sims['u-tube'].createModel();
+        },
+        createView: function (model) {
+          return PL.sims['u-tube'].createView(model);
+        }
       }
-    }]
+    ]
   }, document.body);
 })(window.PL);

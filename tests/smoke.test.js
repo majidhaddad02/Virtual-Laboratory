@@ -151,6 +151,39 @@ describe('smoke', () => {
     assert.doesNotThrow(function () { view.draw(); });
   });
 
+  it('u-tube settle view.draw does not throw', () => {
+    const context = load([
+      'data/registry.js',
+      'sims/u-tube/strings.js',
+      'sims/u-tube/model.js',
+      'sims/u-tube/view.js',
+      'sims/u-tube/settle-model.js',
+      'sims/u-tube/settle-view.js'
+    ]);
+    const PL = context.PL;
+    const model = PL.sims['u-tube'].settle.createModel();
+    const view = PL.sims['u-tube'].createSettleView(model);
+    const stage = context.document.createElement('div');
+    const panel = context.document.createElement('div');
+    view.mount(stage, panel);
+    const canvases = [];
+    function grab(node) {
+      var i;
+      if (node.tagName === 'CANVAS') canvases.push(node);
+      if (node.children) {
+        for (i = 0; i < node.children.length; i++) grab(node.children[i]);
+      }
+    }
+    grab(stage);
+    assert.ok(canvases.length >= 1, 'expected canvas');
+    canvases[0].getContext = function () { return stubCtx(); };
+    canvases[0].width = 400;
+    canvases[0].height = 300;
+    view.layout(400, 300, 2);
+    assert.doesNotThrow(function () { view.draw(); });
+    view.dispose();
+  });
+
   it('surface-tension view.draw does not throw', () => {
     const context = load([
       'data/registry.js',

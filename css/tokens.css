@@ -53,6 +53,7 @@ img{display:block;max-width:100%}
   font-weight:700;letter-spacing:.02em;
 }
 .ltr{direction:ltr;unicode-bidi:isolate}
+.hidden{display:none}
 :focus-visible{outline:3px solid var(--purple);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}

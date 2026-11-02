@@ -88,6 +88,14 @@ Fixed in Phase E: `equationTerms` tags the unknown by `(arm, index)` the same wa
 - Pour-and-settle is overdamped; real water would slosh. Snap to analytic equilibrium when `|H| < 0.02` cm.
 - Visual quality, animation smoothness, and real-browser layout at 360/1920 were not checked in a browser in this pass.
 
+## Barometer (Torricelli)
+
+- Pedagogy not yet tested with students.
+- Visual quality of the step-3 rotation animation and of the two-scale layout not verified in a real browser.
+- ISA troposphere formula is used as written; vapour pressure of mercury and water is omitted.
+- Activity presets that belong on the free lab use `preset.screen = 'free'`. `core/activity.js` ignores that key; `core/shell.js` switches to that screen after Reset All. Smallest change; documented in `docs/API.md`.
+- Screen 1 local «از اول» resets only the steps model, not the free lab (Reset All still resets both).
+
 ## Phase F (docs, pack, fonts)
 
 - Vazirmatn woff2 is local under `fonts/`. Browsers without woff2 fall back to Tahoma.

@@ -200,8 +200,25 @@
 
     function applyChallengePreset(preset) {
       resetAll();
-      PL.Activity.applyPreset(models[active], preset);
-      views[active].draw();
+      var idx = active;
+      var i, k, rest;
+      if (preset && preset.screen) {
+        for (i = 0; i < screens.length; i++) {
+          if (screens[i].id === preset.screen) {
+            idx = i;
+            break;
+          }
+        }
+      }
+      if (idx !== active) switchScreen(idx);
+      rest = {};
+      if (preset) {
+        for (k in preset) {
+          if (Object.prototype.hasOwnProperty.call(preset, k) && k !== 'screen') rest[k] = preset[k];
+        }
+      }
+      PL.Activity.applyPreset(models[idx], rest);
+      views[idx].draw();
     }
 
     function setActivityOpen(open) {

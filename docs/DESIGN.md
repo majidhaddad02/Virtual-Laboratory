@@ -24,7 +24,7 @@ Fill one brief per simulation in `docs/sims/<id>.md` (and keep `goals` / `modelN
 4. Screens (one apparatus = one screen unless modes are truly different experiments).
 5. Representations (canvas, gauges, equation overlay) and how they stay in sync.
 
-Ported briefs: `docs/sims/crystalline.md`, `docs/sims/crystalline-3d.md`, `docs/sims/hydrostatic.md`, `docs/sims/u-tube.md`, `docs/sims/surface-tension.md`.
+Ported briefs: `docs/sims/crystalline.md`, `docs/sims/crystalline-3d.md`, `docs/sims/hydrostatic.md`, `docs/sims/u-tube.md`, `docs/sims/surface-tension.md`, `docs/sims/barometer.md`.
 
 ## Catalog
 

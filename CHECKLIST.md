@@ -4,7 +4,7 @@ Run after `npm test`, `node tools/build-registry.js --check`, and `node tools/sy
 
 ## Catalog
 
-- [ ] `index.html` as `file://` shows five cards from `PL.registry`
+- [ ] `index.html` as `file://` shows six cards from `PL.registry`
 - [ ] Hash `#molecular` and `#pressure` filter cards
 - [ ] Thumbnails are inline SVG, not photos
 - [ ] Vazirmatn loads from `fonts/` (Tahoma fallback if the browser has no woff2)

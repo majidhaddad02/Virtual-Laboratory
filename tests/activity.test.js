@@ -24,6 +24,7 @@ function extras(id) {
   files.push('sims/' + id + '/meta.js');
   files.push('sims/' + id + '/strings.js');
   files.push('sims/' + id + '/model.js');
+  if (id === 'barometer') files.push('sims/barometer/free-model.js');
   files.push('sims/' + id + '/activity.js');
   return files;
 }
@@ -108,6 +109,8 @@ describe('activity', () => {
     assert.strictEqual(model.temperature.value, 80);
     assert.strictEqual(PL.Activity.presetKeysValid({ temperature: 1 }, model), true);
     assert.strictEqual(PL.Activity.presetKeysValid({ nope: 1 }, model), false);
+    assert.strictEqual(PL.Activity.presetKeysValid({ screen: 'free', temperature: 1 }, model), true);
+    assert.strictEqual(PL.Activity.presetKeysValid({ screen: 'free', nope: 1 }, model), false);
   });
 
   it('every activity.js covers meta goals and preset keys are Properties', () => {
@@ -127,7 +130,8 @@ describe('activity', () => {
       }
       cover = PL.Activity.coverGoals(def, PL.meta[ids[i]].goals);
       assert.ok(cover.ok, ids[i] + ' goals ' + cover.errors.join(','));
-      model = PL.sims[ids[i]].createModel();
+      if (ids[i] === 'barometer') model = PL.sims.barometer.free.createModel();
+      else model = PL.sims[ids[i]].createModel();
       for (j = 0; j < def.challenges.length; j++) {
         ch = def.challenges[j];
         assert.ok(PL.Activity.presetKeysValid(ch.preset, model), ids[i] + ' ' + ch.id + ' preset');

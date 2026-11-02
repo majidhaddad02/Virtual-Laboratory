@@ -12,6 +12,7 @@
     var k;
     for (k in preset) {
       if (!Object.prototype.hasOwnProperty.call(preset, k)) continue;
+      if (k === 'screen') continue;
       if (isProperty(model[k])) model[k].value = preset[k];
     }
   }
@@ -22,6 +23,7 @@
     var k;
     for (k in preset) {
       if (!Object.prototype.hasOwnProperty.call(preset, k)) continue;
+      if (k === 'screen') continue;
       if (!isProperty(model[k])) return false;
     }
     return true;

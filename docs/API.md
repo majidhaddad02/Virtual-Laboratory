@@ -135,8 +135,8 @@ Pure helpers (unit-tested):
 - `isCorrect(challenge, selectedIndex)` → boolean.
 - `checkAnswer(challenge, selectedIndex)` → `{ correct, selected, answerIndex, explanation }`. Does not read the sim.
 - `isProperty(x)` → boolean.
-- `applyPreset(model, preset)` sets each key if it is a Property. Used after Reset All.
-- `presetKeysValid(preset, model)` → boolean. Every preset key must be a Property on the model.
+- `applyPreset(model, preset)` sets each key if it is a Property. Used after Reset All. Ignores `screen`.
+- `presetKeysValid(preset, model)` → boolean. Every preset key except optional `screen` must be a Property on the model.
 
 DOM:
 
@@ -150,7 +150,7 @@ DOM:
 - `simDef.screens` `{ id, title, icon?, createModel, createView }[]`
 - `simDef.fit` boolean default false (`sim-app fit`)
 - Links `model.playing` once per model; unlinks on dispose.
-- Top-bar «فعالیت» appears only if `PL.activities[simDef.id]` exists. Non-modal side drawer opposite the control panel (`aria-expanded`, Escape closes, focus returns to the button, no focus trap). Below 760 px: bottom sheet. Reset All does not clear worksheet fields. «تنظیم آزمایش» = Reset All then `applyPreset`.
+- Top-bar «فعالیت» appears only if `PL.activities[simDef.id]` exists. Non-modal side drawer opposite the control panel (`aria-expanded`, Escape closes, focus returns to the button, no focus trap). Below 760 px: bottom sheet. Reset All does not clear worksheet fields. «تنظیم آزمایش» = Reset All then `applyPreset`. Optional `preset.screen` is a screen `id`; the shell switches to that screen, then applies the remaining keys to that screen's model.
 
 ## PL.shared.crystals
 

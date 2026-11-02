@@ -54,7 +54,19 @@ function stubDocument() {
           arc: function () {},
           createRadialGradient: function () {
             return { addColorStop: function () {} };
-          }
+          },
+          createLinearGradient: function () {
+            return { addColorStop: function () {} };
+          },
+          ellipse: function () {},
+          save: function () {},
+          restore: function () {},
+          setLineDash: function () {},
+          fillText: function () {},
+          fillRect: function () {},
+          strokeRect: function () {},
+          closePath: function () {},
+          clip: function () {}
         };
       }
     };
